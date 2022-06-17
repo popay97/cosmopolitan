@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "PostNord";
+    src: url("/fonts/PostNordSansLight.ttf");
+  }
+
+body {
+    font-family: 'PostNord', sans-serif;
+}

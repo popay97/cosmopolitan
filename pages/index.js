@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import clientPromise from '../lib/mongodb'
-import { ObjectId } from 'mongodb'
-import FileComponent from '../components/FileUpload'
+import FileComponent from '../components/FileUpload';
 
 export default function Home({ isConnected }) {
   return (
@@ -12,10 +11,6 @@ export default function Home({ isConnected }) {
       </Head>
 
       <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
-        </h1>
-
         {isConnected ? (
           <h2 className="subtitle">You are connected to MongoDB</h2>
         ) : (
@@ -24,15 +19,10 @@ export default function Home({ isConnected }) {
             for instructions.
           </h2>
         )}
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
         <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
+          <div href="https://nextjs.org/docs" className="card">
             <FileComponent />
-          </a>
+          </div>
 
           <a href="https://nextjs.org/learn" className="card">
             <h3>Learn &rarr;</h3>
@@ -155,10 +145,9 @@ export default function Home({ isConnected }) {
 
         .grid {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
           flex-wrap: wrap;
-
           max-width: 800px;
           margin-top: 3rem;
         }
@@ -178,8 +167,9 @@ export default function Home({ isConnected }) {
         .card:hover,
         .card:focus,
         .card:active {
-          color: #0070f3;
-          border-color: #0070f3;
+          border: 4px solid #000000;
+          transition: 0.5s;
+
         }
 
         .card h3 {
@@ -210,9 +200,6 @@ export default function Home({ isConnected }) {
         body {
           padding: 0;
           margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
         }
 
         * {
@@ -227,8 +214,8 @@ export async function getServerSideProps(context) {
   try {
     const client = await clientPromise
     const db = client.db(`${process.env.MONGODB_DB}`)
-    let documents = await db.collection("data").findOne({"_id": ObjectId("5553a998e4b02cf7151190be")})
-    console.log(documents)
+    //let documents = await db.collection("data").findOne({"_id": ObjectId("5553a998e4b02cf7151190be")})
+
     return {
       props: { isConnected: true },
     }
