@@ -22,9 +22,7 @@ function fileUpload() {
   }
 
   };
-    const handleOnSubmit = (e) => {
-        e.preventDefault();
-
+    const handleOnSubmit = async () => {
         if (file) {
             
         }
@@ -40,8 +38,10 @@ function fileUpload() {
                     Izaberi fajl
                 </button>
                 <input className={styles.myButton} ref={hiddenFileInput} type={"file"} accept={".csv"} onChange={(e) => {changeHandler(e)}} style={{display: 'none'}} />
-                {file ? <><h3 style={{fontFamily: "PostNord"}}>{file.name} <img src="/check-solid.svg" style={{color: "green", width: "20px", verticalAlign: "middle", marginLeft: "5px"}}></img> </h3>
-                </>: <div></div>}
+                {file ? <><h3 style={{fontFamily: "PostNord"}}>{file.name} <img src="/check-solid.svg" style={{width: "20px", verticalAlign: "middle", marginLeft: "5px"}}></img> </h3>
+                             <button onClick={handleOnSubmit} className={styles.myButton}></button>
+                              Obradi fajl
+                          </>: <div></div>}
         </div>
     );
 }
