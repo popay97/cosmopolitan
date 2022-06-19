@@ -215,7 +215,6 @@ export async function getServerSideProps(context) {
     const client = await clientPromise
     const db = client.db(`${process.env.MONGODB_DB}`)
     //let documents = await db.collection("data").findOne({"_id": ObjectId("5553a998e4b02cf7151190be")})
-
     return {
       props: { isConnected: true },
     }
