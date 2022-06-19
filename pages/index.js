@@ -20,44 +20,38 @@ export default function Home({ isConnected }) {
           </h2>
         )}
         <div className="grid">
-          <div href="https://nextjs.org/docs" className="card">
+          <div className="card">
             <FileComponent />
           </div>
 
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+          <div  className="card">
+            <h3>4-day report &rarr;</h3>
+            <p>Učitaj četvorodnevni report.</p>
+          </div>
 
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
+          <div
             className="card"
           >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+            <h3>7-day report &rarr;</h3>
+            <p>Učitaj sedmodnevni report</p>
+          </div>
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+          <div
             className="card"
           >
-            <h3>Deploy &rarr;</h3>
+            <h3>Pretraga &rarr;</h3>
             <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
+              Pretraži bazu.
             </p>
-          </a>
+          </div>
         </div>
       </main>
 
       <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
+        <div className="footer-div" >
+          <p>Powered by</p>
+          <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
+        </div>
       </footer>
 
       <style jsx>{`
@@ -88,12 +82,9 @@ export default function Home({ isConnected }) {
           align-items: center;
         }
 
-        footer img {
-          margin-left: 0.5rem;
-        }
-
-        footer a {
-          display: flex;
+        .footer-div {
+          display:flex;
+          flex-direction: row;
           justify-content: center;
           align-items: center;
         }
@@ -184,7 +175,7 @@ export default function Home({ isConnected }) {
         }
 
         .logo {
-          height: 1em;
+            width: 4rem;
         }
 
         @media (max-width: 600px) {
