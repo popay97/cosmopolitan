@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import FileComponent from '../components/FileUpload';
-import {dbConnect} from '../lib/dbConnect';
+import dbConnect from '../lib/dbConnect';
 export default function Home({ isConnected }) {
   return (
     <div className="container">
@@ -204,10 +204,8 @@ export default function Home({ isConnected }) {
 
 export async function getServerSideProps(context) {
   try {
-    const mongo = await dbConnect();
-    const table = mongo.collection(`${process.env.MONGODB_DB}`).find()
-    console.log(...table);
-    
+    await dbConnect();
+
     return {
       props: { isConnected: true },
     }
