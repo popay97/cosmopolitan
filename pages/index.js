@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import FileComponent from '../components/FileUpload';
 import dbConnect from '../lib/dbConnect';
+import mongoose from 'mongoose';
 export default function Home({ isConnected }) {
   return (
     <div className="container">
@@ -205,7 +206,12 @@ export default function Home({ isConnected }) {
 export async function getServerSideProps(context) {
   try {
     await dbConnect();
-
+    function find (name, query, cb) {
+      mongoose.connection.db.collection(name, function (err, collection) {
+         collection.find(query).toArray(cb);
+     });
+    }
+    find(`${process.env.MONGODB_DB}`,{}, (docs)=>{console.log(docs)})
     return {
       props: { isConnected: true },
     }
