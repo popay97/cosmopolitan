@@ -10,7 +10,7 @@ function fileUpload() {
     if (event.target.files[0]) {
       setFile(event.target.files[0]);
       await Papa.parse(event.target.files[0], {
-        header: true,
+        header: false,
         skipEmptyLines: true,
         complete: function (results) {
           setObj([...results.data]);

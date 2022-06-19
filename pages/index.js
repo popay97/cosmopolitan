@@ -1,7 +1,6 @@
 import Head from 'next/head'
-import clientPromise from '../lib/mongodb'
 import FileComponent from '../components/FileUpload';
-
+import {dbConnect} from '../lib/dbConnect';
 export default function Home({ isConnected }) {
   return (
     <div className="container">
@@ -87,6 +86,7 @@ export default function Home({ isConnected }) {
           flex-direction: row;
           justify-content: center;
           align-items: center;
+          
         }
 
         a {
@@ -175,7 +175,8 @@ export default function Home({ isConnected }) {
         }
 
         .logo {
-            width: 4rem;
+            width: 3.5rem;
+            margin-left: 20px;
         }
 
         @media (max-width: 600px) {
@@ -203,9 +204,10 @@ export default function Home({ isConnected }) {
 
 export async function getServerSideProps(context) {
   try {
-    const client = await clientPromise
-    const db = client.db(`${process.env.MONGODB_DB}`)
-
+    const mongo = await dbConnect();
+    const table = mongo.collection(`${process.env.MONGODB_DB}`).find()
+    console.log(...table);
+    
     return {
       props: { isConnected: true },
     }
