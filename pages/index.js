@@ -206,12 +206,17 @@ export default function Home({ isConnected }) {
 export async function getServerSideProps(context) {
   try {
     await dbConnect();
-    function find (name, query, cb) {
-      mongoose.connection.db.collection(name, function (err, collection) {
-         collection.find(query).toArray(cb);
-     });
-    }
-    find(`${process.env.MONGODB_DB}`,{}, (docs)=>{console.log(docs)})
+    const connection = mongoose.connection;
+
+    connection.on('error', console.error.bind(console, 'connection error:'));
+    connection.once('open', async function () {
+    
+      const collection  = connection.db.collection(`${process.env.MONGODB_DB}`);
+      collection.find({}).toArray(function(err, data){
+          console.log(...data); // it will print your collection data
+      });
+    });
+
     return {
       props: { isConnected: true },
     }
