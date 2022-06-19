@@ -213,7 +213,7 @@ export async function getServerSideProps(context) {
     
       const collection  = connection.db.collection(`${process.env.MONGODB_DB}`);
       collection.find({}).toArray(function(err, data){
-          console.log(...data); // it will print your collection data
+          console.log(data); // it will print your collection data
       });
     });
 
