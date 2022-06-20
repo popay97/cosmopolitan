@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import Papa from "papaparse";
 import styles from "./FileUpload.module.css";
+import axios from 'axios';
 
 function fileUpload() {
   const [file, setFile] = useState();
