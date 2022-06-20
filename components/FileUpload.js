@@ -14,14 +14,16 @@ function fileUpload() {
         skipEmptyLines: true,
         complete: function (results) {
           setObj([...results.data]);
-          console.log([...results.data]);
         },
       });
     }
   };
   const handleOnSubmit = async () => {
     if (file) {
-      console.log("Salji fajl na bek");
+      await axios.get('/api/csv').then((res) =>{
+          console.log(res)
+      });
+      console.log(obj[0])
     }
   };
 

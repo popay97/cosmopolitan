@@ -2,7 +2,7 @@ import {model,Schema} from 'mongoose';
 import ReservationSchema from '../../models/ReservationModel'
 
 export default function handler(req, res) {
-    const data = req.body;
+   /*  const data = req.body;
     let objForSave = {};
     for(let i = 0;i<data.length;i++){
         const found = ReservationSchema.findOne({resId: data[i][0]})
@@ -24,6 +24,6 @@ export default function handler(req, res) {
 
             }
         }
-    }
+    } */
     res.status(200).json({ name: 'John Doe' })
   }
