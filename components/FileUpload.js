@@ -20,11 +20,13 @@ function fileUpload() {
     }
   };
   const handleOnSubmit = async () => {
-    if (file) {
-      await axios.get('/api/csv').then((res) =>{
-          console.log(res)
-      });
-      console.log(obj[0])
+    console.log(obj)
+    if (obj.length > 0) {
+      await axios.post('/api/csv', obj).then((res) =>{
+          console.log(res.data)
+      }).catch(err =>{
+        console.log(err.response);
+      })
     }
   };
 

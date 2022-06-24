@@ -5,6 +5,9 @@ const ReservationSchema = new Schema({
     resId:{
         type: String
     },
+    status: {
+        type: String
+    },
     title:{
         type: String
     },  
@@ -23,9 +26,6 @@ const ReservationSchema = new Schema({
     booked: {
         type: Date
     },
-    userCd:{
-        type: String
-    },
     arrivalAirport: {
         type: String
     },
@@ -33,7 +33,6 @@ const ReservationSchema = new Schema({
     arrivalFlight: {
         number: String,
         arrTime: String,
-        depTime: String,
         depAirport: String,
     },
     depDate: Date,
@@ -41,19 +40,14 @@ const ReservationSchema = new Schema({
         number: String,
         depAirport: String,
         arrAirport: String,
-        depTime: String,
-        arrTime: String
-
     },
-    transferCd: String,
-    transferType: String,
+    transfer: String,
     accomCd: String,
     accom: String,
     resort: String,
-    room: String,
     country: String
 
-},{collection:"passanger",Strings:true,validateBeforeSave:false});
+},{collection:"reservation",Strings:true,validateBeforeSave:false});
 
 ReservationSchema.set('toObject', {virtuals: true});
 ReservationSchema.set('toJSON', {virtuals: true});
