@@ -2,6 +2,21 @@ import Head from "next/head";
 import FileComponent from "../components/FileUpload";
 import dbConnect from "../lib/dbConnect";
 import NDayReport from "../components/NDayReport";
+import React, { useState, useEffect } from "react";
+
+export async function getServerSideProps(context) {
+  try {
+    await dbConnect();
+    return {
+      props: { isConnected: true },
+    }
+  } catch (e) {
+    console.error(e)
+    return {
+      props: { isConnected: false },
+    }
+  }
+}
 
 export default function Home({ isConnected }) {
   const [view, setView] = useState("home");
@@ -31,9 +46,9 @@ export default function Home({ isConnected }) {
               <FileComponent />
             </div>
 
-            <div className="card" onClick={()={
+            <div className="card" onClick={() => {
               changeView("report")
-            }}>
+            }} style={{cursor: "pointer"}}>
               <h3>4-day report &rarr;</h3>
               <p>Učitaj četvorodnevni report.</p>
             </div>
