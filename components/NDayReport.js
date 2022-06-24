@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import ReservationModel from '../models/ReservationModel';
+import mongoose from 'mongoose';
 export async function getServerSideProps(context) {
-    const AllData = await ReservationModel.find({});
+    const AllData = await mongoose.model('Reservation').find({});
     return {
         props: { AllData },
     }
