@@ -1,4 +1,3 @@
-import { String } from "mongodb";
 import mongoose,{model,Schema} from "mongoose";
 
 const ReservationSchema = new Schema({
@@ -38,15 +37,14 @@ const ReservationSchema = new Schema({
     depDate: Date,
     departureFlight:{
         number: String,
-        depAirport: String,
         arrAirport: String,
+        depTime: String,
     },
     transfer: String,
     accomCd: String,
     accom: String,
     resort: String,
-    country: String
-
+    price: Number,
 },{collection:"reservation",Strings:true,validateBeforeSave:false});
 
 ReservationSchema.set('toObject', {virtuals: true});

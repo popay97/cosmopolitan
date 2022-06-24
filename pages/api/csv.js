@@ -1,10 +1,13 @@
 import Reservation from '../../models/ReservationModel';
 
 export default async function handler(req, res) {
+  let updated = 0;
+  let created = 0;
+  let errors = 0;
   const csvData = [...req.body];
-  let objForSave;
   for (let i = 0; i < csvData.length; i++) {
       let phone;
+      let objForSave;
       if (csvData[i][10].startsWith("00")) {
         phone = "+" + csvData[i][10].slice(2);
       } else {
@@ -44,23 +47,31 @@ export default async function handler(req, res) {
           arrAirport: csvData[i][26],
           depTime: csvData[i][24],
         },
-        price: csvData[i][27],
+        price: parseInt(csvData[i][27]),
         accomCd: csvData[i][29],
       };
       console.log(objForSave);
+      try {
+        const found = await Reservation.findOne({ resId: objForSave.resId });
+        if (found) {
+        const savedBooking = await Reservation.findOneandUpdate({ resId: objForSave.resId }, objForSave, { new: true });  
+        updated++;
+        }
+        else {
+          const savedBooking = await Reservation.create(objForSave);
+          created++;
+        }
+    
+      } catch (error) {
+        console.log(error);
+        errors++;
+      }
     }
-  try {
-    const found = await Reservation.findOne({ resId: objForSave.resId });
-    if (found) {
-    const savedBooking = await Reservation.findOneandUpdate({ resId: objForSave.resId }, objForSave, { new: true });
-     res.status(200).json({success: true, ...savedBooking});
+    if(errors > 0) {
+      return res.status(500).json({
+        message: `${errors} errors occured while saving the data`,
+        data: csvData,
+      });
     }
-    else {
-      const savedBooking = await Reservation.create(objForSave);
-      res.status(200).json({success: true, ...savedBooking});
-    }
-
-  } catch (error) {
-    res.status(500).json({success: false, error: error});
-  }
+    return res.status(200).json({success: true, created: created, updated: updated});
 }

@@ -24,8 +24,8 @@ function fileUpload() {
     if (obj.length > 0) {
       await axios.post('/api/csv', obj).then((res) =>{
           console.log(res.data)
-      }).catch(err =>{
-        console.log(err.response);
+      }).catch(err =>{  
+        console.log(err.response.data);
       })
     }
   };
