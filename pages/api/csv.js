@@ -50,7 +50,6 @@ export default async function handler(req, res) {
         price: parseInt(csvData[i][27]),
         accomCd: csvData[i][29],
       };
-      console.log(objForSave);
       try {
         const found = await Reservation.findOne({ resId: objForSave.resId });
         if (found) {
@@ -69,6 +68,8 @@ export default async function handler(req, res) {
     }
     if(errors > 0) {
       return res.status(500).json({
+        created: created,
+        updated: updated,
         message: `${errors} errors occured while saving the data`,
         data: csvData,
       });
