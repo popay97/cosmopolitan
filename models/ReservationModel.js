@@ -49,4 +49,4 @@ const ReservationSchema = new Schema({
 
 ReservationSchema.set('toObject', {virtuals: true});
 ReservationSchema.set('toJSON', {virtuals: true});
-export default model("Reservation",ReservationSchema)
+export default (mongoose.models.Reservation || mongoose.model("Reservation", ReservationSchema));

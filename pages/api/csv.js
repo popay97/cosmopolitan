@@ -1,4 +1,4 @@
-import Reservation from '../../models/ReservationModel';
+import Reservation from '../../models/ReservationModel.js';
 
 export default async function handler(req, res) {
   let updated = 0;
@@ -74,5 +74,5 @@ export default async function handler(req, res) {
         data: csvData,
       });
     }
-    return res.status(200).json({success: true, created: created, updated: updated});
+    return res.status(200).json({success: true, created: created, updated: updated, errors: errors});
 }
