@@ -33,7 +33,7 @@ export default async function handler(req, res) {
         arrivalAirport: csvData[i][11],
         phone: phone,
         transfer: csvData[i][13],
-        arrDate: formatDate(csvData[i][19], csvData[i][20]),
+        arrivalDate: formatDate(csvData[i][19], csvData[i][20]),
         arrivalFlight: {
           number: csvData[i][18],
           depAirport: csvData[i][17],

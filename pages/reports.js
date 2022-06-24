@@ -1,9 +1,10 @@
 import React, { useEffect } from "react";
 import Reservation from "../models/ReservationModel";
 export async function getServerSideProps(context) {
-  const AllData = await Reservation.find({});
+  const getData = await Reservation.find({}).lean();
+  const AllData = JSON.parse(JSON.stringify(getData))
   return {
-    props: { AllData},
+    props: {AllData},
   };
 }
 function NDayReport({ AllData }) {
@@ -11,21 +12,22 @@ function NDayReport({ AllData }) {
   const [filter, setFilter] = React.useState(4);
   const filterData = () => {
     //set data array to contain only objects that less then filter days away from today=
-    setData(
-      AllData.filter((item) => {
+    setData([...AllData.filter((item) => {
+        console.log(item)
         const date = new Date(item.arrivalDate);
-        const diff = Math.abs(date.getTime() - new Date().getTime());
+        const today = new Date();
+        console.log(date)
+        console.log(today)
+        const diff = Math.abs(date.getTime() - today.getTime());
         const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-        if (diffDays < filter) {
-          return item;
-        }
-      })
-    );
+        return diffDays <= filter;})]);
+    console.log(data);
   };
   useEffect(() => {
     console.log("useEffect");
     console.log(AllData);
     filterData();
+    console.log(data);
   }, [filter]);
   return (
     <>
