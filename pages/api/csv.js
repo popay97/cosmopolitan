@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         var newReservation = new Reservation(objForSave);
         const found = await Reservation.findOne({ resId: objForSave.resId });
         if (found) {
-        await newReservation.findOneandUpdate({ resId: objForSave.resId }, objForSave, { new: true });  
+        await newReservation.findOneAndUpdate({ resId: objForSave.resId }, objForSave, { new: true });  
         updated++;
         }
         else {
