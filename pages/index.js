@@ -1,7 +1,7 @@
 import Head from "next/head";
 import FileComponent from "../components/FileUpload";
 import dbConnect from "../lib/dbConnect";
-import NDayReport from "../components/NDayReport";
+import NDayReport from "./reports";
 import React, { useState, useEffect } from "react";
 
 export async function getServerSideProps(context) {
@@ -19,12 +19,6 @@ export async function getServerSideProps(context) {
 }
 
 export default function Home({ isConnected }) {
-  const [view, setView] = useState("home");
-
-  const changeView = (view) => {
-    setView(view);
-  }
-  if (view === "home") {
     return (
       <div className="container">
         <Head>
@@ -47,7 +41,7 @@ export default function Home({ isConnected }) {
             </div>
 
             <div className="card" onClick={() => {
-              changeView("report")
+              window.location.href = "/reports"
             }} style={{cursor: "pointer"}}>
               <h3>4-day report &rarr;</h3>
               <p>Učitaj četvorodnevni report.</p>
@@ -217,82 +211,4 @@ export default function Home({ isConnected }) {
         `}</style>
       </div>
     );
-  } else if (view === "report") {
-    return (
-      <div className="container">
-        <Head>
-          {" "}
-          <title>Create Next App</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        <main>
-          <div className="table">
-            <NDayReport />
-          </div>
-        </main>
-        <footer>
-          <div className="footer-div">
-            <p>Powered by</p>
-            <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
-          </div>
-        </footer>
-        <style jsx>{`
-          .container {
-            min-height: 100vh;
-            padding: 0 0.5rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-          }
-
-          main {
-            padding: 5rem 0;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-          }
-          footer {
-            width: 100%;
-            height: 100px;
-            border-top: 1px solid #eaeaea;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-          .footer-div {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-          }
-          .table{
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 75%;
-            minHeight: 100vh;
-            overflow: auto;
-          }
-        `}</style>
-
-        <style jsx global>{`
-          html,
-          body {
-            padding: 0;
-            margin: 0;
-          }
-
-          * {
-            box-sizing: border-box;
-          }
-        `}</style>
-      </div>
-    );
-  } else {
-    return <div>kurcina</div>;
-  }
 }
