@@ -51,9 +51,10 @@ export default async function handler(req, res) {
         accomCd: csvData[i][29],
       };
       try {
+        var newReservation = new Reservation(objForSave);
         const found = await Reservation.findOne({ resId: objForSave.resId });
         if (found) {
-        const savedBooking = await Reservation.findOneandUpdate({ resId: objForSave.resId }, objForSave, { new: true });  
+        await newReservation.findOneandUpdate({ resId: objForSave.resId }, objForSave, { new: true });  
         updated++;
         }
         else {
