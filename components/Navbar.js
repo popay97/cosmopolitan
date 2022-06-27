@@ -7,15 +7,13 @@ function Navbar() {
         <style jsx>{`
 
             .navbar {
-                position: fixed;
-                top: 0;
-                left: 0;
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
                 width: 100%;
-                height: 100px;
+                height: 70px;
                 background: #ffffff;
                 z-index: 1;
-                display: flex;
-                justify-content: center;
                 align-items: center;
                 border-bottom: 1px solid #eaeaea;
             }
