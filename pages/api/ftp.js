@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     today = yyyy + '-' + mm + '-' + dd;
     let filename = dmc + '_' + today + '.' + 'gpg';
     const ftp = new Client();
+    ftp.on('error', function(err) {  console.log(err); return res.status(400).json({ kita: "da, ogromna" }); });
     ftp.on('ready', function() {
         ftp.get(`/${filename}`, function(err, stream) {
           if (err) throw err;
@@ -25,17 +26,15 @@ export default async function handler(req, res) {
           stream.pipe(fs.createWriteStream(`${filename.split(".")[0]}-copy.gpg`));
         });
       });
+      ftp.on('error', function(err) {  console.log(err); return res.status(400).json({ error: err }); });
+
     ftp.connect({
         host: 'ezy-sftp.atcoretec.com',
         user: 'dmc_cosmo',
         password: '~f0q/ugRR*K]'
     });
-    ftp.on('error', function(err) {  console.log(err); return res.status(400).json({ error: err }); });
-    try {
-      const pgpMessage = fs.readFileSync(`${filename.split(".")[0]}-copy.gpg`, 'utf8');
-    } catch (error) {
-      return res.status(400).json({ error: error });
-    }
+    
+    const pgpMessage = fs.readFileSync(`${filename.split(".")[0]}-copy.gpg`, 'utf8');
     const publicKeyArmored = `${process.env.PUBLIC_KEY}`;
     const privateKeyArmored = `${process.env.PRIVATE_KEY}`;
 
@@ -43,7 +42,7 @@ export default async function handler(req, res) {
     const privateKey = await openpgp.readKey({ armoredKey: privateKeyArmored });
 
     const { data: decrypted, signatures } = await openpgp.decrypt({
-      pgpMessage,
+      message: pgpMessage,
       verificationKeys: publicKey, // optional
       decryptionKeys: privateKey
     });

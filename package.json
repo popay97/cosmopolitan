@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "axios": "^0.27.2",
+    "ftp": "^0.3.10",
     "gpg": "^0.6.0",
     "moment": "^2.29.3",
     "mongodb": "^4.1.3",
