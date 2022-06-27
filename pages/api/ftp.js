@@ -30,8 +30,7 @@ export default async function handler(req, res) {
         user: 'dmc_cosmo',
         password: '~f0q/ugRR*K]'
     });
-    ftp.on('error', function(err) {  console.log(err); return res.status(400).json({ error: err }); }
-    );
+    ftp.on('error', function(err) {  console.log(err); return res.status(400).json({ error: err }); });
     try {
       const pgpMessage = fs.readFileSync(`${filename.split(".")[0]}-copy.gpg`, 'utf8');
     } catch (error) {
