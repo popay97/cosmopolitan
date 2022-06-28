@@ -6,7 +6,6 @@ import axios from "axios";
 
 export async function getServerSideProps(context) {
   try {
-    await dbConnect();
     return {
       props: { isConnected: true },
     }
