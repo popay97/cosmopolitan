@@ -7,6 +7,7 @@ const connectDB = handler => async (req, res) => {
   }
   // Use new db connection
   await mongoose.connect(process.env.MONGODB_URI, {});
+  console.log('Connected to MongoDB');
   return handler(req, res);
 };
 
