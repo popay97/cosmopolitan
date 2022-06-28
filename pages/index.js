@@ -1,9 +1,11 @@
 import Head from "next/head";
 import FileComponent from "../components/FileUpload";
+import dbConnect from "../lib/dbConnect";
 import React from "react";
 
 export async function getServerSideProps(context) {
   try {
+    await dbConnect();
     return {
       props: { isConnected: true },
     }
