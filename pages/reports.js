@@ -12,32 +12,39 @@ export async function getServerSideProps(context) {
   };
 }
 function NDayReport({ AllData }) {
-  const [data, setData] = React.useState([]);
-  const [filter, setFilter] = React.useState(4);
+  const [data, setData] = React.useState([...AllData]);
+  const [filterDy, setFilterDys] = React.useState(4);
+  const [filterWord, setFilterWord] = React.useState("");
+  const [filteredData, setFilteredData] = React.useState([]);
+
   const options = [
-    { value: 4, label: "4" },
-    { value: 7, label: "7" },
-    { value: 10, label: "10" },
+    { value: 4.8, label: "4 dana" },
+    { value: 7.8, label: "7 dana" },
+    { value: 10.8, label: "10 dana" },
+    { value: 15.8, label: "15 dana" },
+    { value: 30.8, label: "30 dana" },
   ];
   const filterData = () => {
-    //set data array to contain only objects that less then filter days away from today=
-    setData([
-      ...AllData.filter((item) => {
-        console.log(item);
+    //set data array to contain only objects that less then filter days away from today
+    setFilteredData([...data.filter((item) => {
+        let searchFlag =  true;
+        if(filterWord != ""){
+        let arr = Object.values(item);
+        let str = arr.join(" ").toLowerCase();
+        searchFlag = str.includes(filterWord.toLowerCase());
+        }          
         const date = new Date(item.arrivalDate);
         const today = new Date();
-        console.log(date);
-        console.log(today);
         const diff = Math.abs(date.getTime() - today.getTime());
         const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-        return diffDays <= filter;
+        return diffDays <= filterDy && searchFlag;
       }),
     ]);
-    console.log(data);
   };
   useEffect(() => {
     filterData();
-  }, [filter]);
+  }, [filterDy, data, filterWord]);
+
   return (
     <div className="container">
       <Head>
@@ -51,8 +58,18 @@ function NDayReport({ AllData }) {
             <label>Broj dana:</label>
             <Select
               options={options}
+              defaultInputValue = {filterDy}
               onChange={(e) => {
-                setFilter(e.value);
+                setFilterDys(e.value);
+              }}
+            />
+            <label>Pretraga:</label>
+            <input
+              style={{ width: "100%" }}
+              type="text"
+              placeholder="Pretrazi"
+              onChange={(e) => {
+                setFilterWord(e.target.value);
               }}
             />
           </div>
@@ -78,7 +95,7 @@ function NDayReport({ AllData }) {
                 </tr>
               </thead>
               <tbody>
-                {data.map((res) => (
+                {filteredData.map((res) => (
                   <tr>
                     <td>{res.resId}</td>
                     <td>{res.title}</td>
@@ -181,7 +198,7 @@ function NDayReport({ AllData }) {
             align-items: start;
             width: 90%;
             height: 85vh;
-            padding: 10px;         
+            padding: 10px;
           }
           .control-panel {
             display: flex;
@@ -215,7 +232,7 @@ function NDayReport({ AllData }) {
             flex-direction: row;
             justify-content: center;
             align-items: center;
-            }
+          }
 
           .logo {
             width: 3.5rem;
