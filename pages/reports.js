@@ -58,7 +58,7 @@ function NDayReport({ AllData }) {
             <label>Broj dana:</label>
             <Select
               options={options}
-              defaultInputValue = {filterDy}
+              defaultValue={options[0]}
               onChange={(e) => {
                 setFilterDys(e.value);
               }}
