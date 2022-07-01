@@ -10,7 +10,7 @@ function fileUpload() {
   const changeHandler = async (event) => {
     if (event.target.files[0]) {
       setFile(event.target.files[0]);
-      await Papa.parse(event.target.files[0], {
+      Papa.parse(event.target.files[0], {
         header: false,
         skipEmptyLines: true,
         complete: function (results) {

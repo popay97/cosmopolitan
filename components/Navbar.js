@@ -9,7 +9,7 @@ function Navbar() {
             .navbar {
                 display: flex;
                 flex-direction: row;
-                justify-content: center;
+                justify-content: space-evenly;
                 width: 100%;
                 height: 70px;
                 background: #ffffff;
@@ -27,7 +27,6 @@ function Navbar() {
 
 
         `}</style>
-        <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
         <button className="login-button">Login</button>
     </div> 
 

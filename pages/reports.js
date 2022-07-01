@@ -3,6 +3,12 @@ import Reservation from "../models/ReservationModel";
 import Head from "next/head";
 import Select from "react-select";
 import Navbar from "../components/Navbar";
+import {
+  useTable,
+  usePagination,
+  useAsyncDebounce,
+  useGlobalFilter,
+} from "react-table";
 
 export async function getServerSideProps(context) {
   const getData = await Reservation.find({}).lean();
@@ -11,28 +17,163 @@ export async function getServerSideProps(context) {
     props: { AllData },
   };
 }
+
+
 function NDayReport({ AllData }) {
   const [data, setData] = React.useState([...AllData]);
   const [filterDy, setFilterDys] = React.useState(4);
-  const [filterWord, setFilterWord] = React.useState("");
   const [filteredData, setFilteredData] = React.useState([]);
+  function GlobalFilter({
+    preGlobalFilteredRows,
+    globalFilter,
+    setGlobalFilter,
+  }) {
+    const count = preGlobalFilteredRows.length;
+    const [value, setValue] = React.useState(globalFilter);
+    const onChange = useAsyncDebounce((value) => {
+      setGlobalFilter(value || undefined);
+    }, 200);
+  
+    return (
+      <div style={{ width: "100%" }}>
+        Search:{" "}
+        <input
+          style={{ width: "100%" }}
+          value={value || ""}
+          onChange={(e) => {
+            setValue(e.target.value);
+            onChange(e.target.value);
+          }}
+          placeholder={`${count} records...`}
+        />
+      </div>
+    );
+  }
+  
+  const columns = React.useMemo(
+    () => [
+      {
+        Header: "Reservation ID",
+        accessor: "resId",
+      },
+      {
+        Header: "Title",
+        accessor: "title",
+      },
+      {
+        Header: "First Name",
+        accessor: "name",
+      },
+      {
+        Header: "Last Name",
+        accessor: "surname",
+      },
+      {
+        Header: "Phone",
+        accessor: (row) => row.phone.replace(" ", ""),
+      },
+      {
+        Header: "Booking Date",
+        accessor: (row) => row.booked.split("T")[0],
+      },
+      {
+        Header: "Arrival Airport",
+        accessor: "arrivalAirport",
+      },
+      {
+        Header: "Arrival Date",
+        accessor: (row) => row.arrivalDate.split("T")[0],
+      },
+      {
+        Header: "Arrival Flight",
+        accessor: (row) =>
+          row.arrivalFlight.number +
+          " " +
+          row.arrivalDate.split("T")[1].slice(0, 5) +
+          " " +
+          row.arrivalAirport +
+          " - " +
+          row.departureFlight.arrAirport,
+      },
+      {
+        Header: "Departure Date",
+        accessor: (row) => row.depDate.split("T")[0],
+      },
+      {
+        Header: "Departure Flight",
+        accessor: (row) =>
+          row.departureFlight.number +
+          " " +
+          row.depDate.split("T")[1].slice(0, 5) +
+          " " +
+          row.departureFlight.arrAirport +
+          " - " +
+          row.arrivalAirport,
+      },
+      {
+        Header: " Transfer Type",
+        accessor: (row) => row.transfer,
+      },
+      {
+        Header: "Accomodation",
+        accessor: (row) => row.accom,
+      },
+      {
+        Header: "Accom Cd",
+        accessor: (row) => row.accomCd,
+      },
+      {
+        Header: "Resort",
+        accessor: (row) => row.resort,
+      },
+    ],
+    []
+  );
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    prepareRow,
+    page,
+    state,
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    pageCount,
+    gotoPage,
+    nextPage,
+    previousPage,
+    visibleColumns,
+    preGlobalFilteredRows,
+    setGlobalFilter,
+    state: { pageIndex, pageSize },
+  } = useTable(
+    {
+      columns: columns,
+      data: AllData,
+      initialState: { pageIndex: 0, pageSize: 8 },
+    },
+    useGlobalFilter,
+    usePagination
+  );
 
   const options = [
-    { value: 4.8, label: "4 dana" },
-    { value: 7.8, label: "7 dana" },
-    { value: 10.8, label: "10 dana" },
-    { value: 15.8, label: "15 dana" },
-    { value: 30.8, label: "30 dana" },
+    { value: 4.7, label: "4 dana" },
+    { value: 7.7, label: "7 dana" },
+    { value: 10.7, label: "10 dana" },
+    { value: 15.7, label: "15 dana" },
+    { value: 30.7, label: "30 dana" },
   ];
   const filterData = () => {
     //set data array to contain only objects that less then filter days away from today
-    setFilteredData([...data.filter((item) => {
-        let searchFlag =  true;
-        if(filterWord != ""){
-        let arr = Object.values(item);
-        let str = arr.join(" ").toLowerCase();
-        searchFlag = str.includes(filterWord.toLowerCase());
-        }          
+    setFilteredData([
+      ...data.filter((item) => {
+        let searchFlag = true;
+        if (filterWord != "") {
+          let arr = Object.values(item);
+          let str = arr.join(" ").toLowerCase();
+          searchFlag = str.includes(filterWord.toLowerCase());
+        }
         const date = new Date(item.arrivalDate);
         const today = new Date();
         const diff = Math.abs(date.getTime() - today.getTime());
@@ -43,12 +184,12 @@ function NDayReport({ AllData }) {
   };
   useEffect(() => {
     filterData();
-  }, [filterDy, data, filterWord]);
+  }, [filterDy, data]);
 
   return (
     <div className="container">
       <Head>
-        <title>Create Next App</title>
+        <title>Cosmopolitan Control Panel</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
@@ -64,74 +205,82 @@ function NDayReport({ AllData }) {
               }}
             />
             <label>Pretraga:</label>
-            <input
-              style={{ width: "100%" }}
-              type="text"
-              placeholder="Pretrazi"
-              onChange={(e) => {
-                setFilterWord(e.target.value);
-              }}
+            <GlobalFilter
+              preGlobalFilteredRows={preGlobalFilteredRows}
+              globalFilter={state.globalFilter}
+              setGlobalFilter={setGlobalFilter}
             />
           </div>
           <div className="reportPanel">
-            <table className="demTable">
+            <table {...getTableProps()} className="demTable">
               <thead>
-                <tr>
-                  <th>Reservation ID</th>
-                  <th>Title</th>
-                  <th>First Name</th>
-                  <th>Last Name</th>
-                  <th>Phone</th>
-                  <th>Booking Date</th>
-                  <th>Arrival Airport</th>
-                  <th>Arrival Date</th>
-                  <th>Arrival Flight</th>
-                  <th>Departure Date</th>
-                  <th>Departure Flight</th>
-                  <th>Transfer Type</th>
-                  <th>Accommodation</th>
-                  <th>Accom Cd</th>
-                  <th>Resort</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((res) => (
-                  <tr>
-                    <td>{res.resId}</td>
-                    <td>{res.title}</td>
-                    <td>{res.name}</td>
-                    <td>{res.surname}</td>
-                    <td>{res.phone.replace(" ", "")}</td>
-                    <td>{res.booked.split("T")[0]}</td>
-                    <td>{res.arrivalAirport}</td>
-                    <td>{res.arrivalDate.split("T")[0]}</td>
-                    <td>
-                      {res.arrivalFlight.number +
-                        " " +
-                        res.arrivalDate.split("T")[1].slice(0, 5) +
-                        " " +
-                        res.arrivalAirport +
-                        " - " +
-                        res.departureFlight.arrAirport}
-                    </td>
-                    <td>{res.depDate.split("T")[0]}</td>
-                    <td>
-                      {res.departureFlight.number +
-                        " " +
-                        res.depDate.split("T")[1].slice(0, 5) +
-                        " " +
-                        res.arrivalAirport +
-                        " - " +
-                        res.departureFlight.arrAirport}
-                    </td>
-                    <td>{res.transfer}</td>
-                    <td>{res.accom}</td>
-                    <td>{res.accomCd}</td>
-                    <td>{res.resort}</td>
+                {headerGroups.map((headerGroup) => (
+                  <tr {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map((column) => (
+                      <th {...column.getHeaderProps()}>
+                        {column.render("Header")}
+                      </th>
+                    ))}
                   </tr>
                 ))}
+              </thead>
+              <tbody {...getTableBodyProps()}>
+                {page.map((row, i) => {
+                  prepareRow(row);
+                  return (
+                    <tr {...row.getRowProps()}>
+                      {row.cells.map((cell) => {
+                        return (
+                          <td {...cell.getCellProps()}>
+                            {cell.render("Cell")}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            <div className="pagination">
+              <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+                {"<<"}
+              </button>{" "}
+              <button
+                onClick={() => previousPage()}
+                disabled={!canPreviousPage}
+              >
+                {"<"}
+              </button>{" "}
+              <button onClick={() => nextPage()} disabled={!canNextPage}>
+                {">"}
+              </button>{" "}
+              <button
+                onClick={() => gotoPage(pageCount - 1)}
+                disabled={!canNextPage}
+              >
+                {">>"}
+              </button>{" "}
+              <span>
+                Page{" "}
+                <strong>
+                  {pageIndex + 1} of {pageOptions.length}
+                </strong>{" "}
+              </span>
+              <span>
+                | Go to page:{" "}
+                <input
+                  type="number"
+                  defaultValue={pageIndex}
+                  onChange={(e) => {
+                    const page = e.target.value
+                      ? Number(e.target.value) - 1
+                      : 0;
+                    gotoPage(page);
+                  }}
+                  style={{ width: "100px" }}
+                />
+              </span>{" "}
+            </div>
           </div>
         </div>
       </main>
@@ -152,8 +301,9 @@ function NDayReport({ AllData }) {
             border-collapse: separate;
             border-spacing: 2px;
             border-radius: 5px;
-            -webkit-box-shadow: 4px 1px 10px 1px #000000;
-            box-shadow: 4px 1px 10px 1px #000000;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em,
+              rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em,
+              rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
           }
           .demTable th {
             border: 1px outset #b3adad;
