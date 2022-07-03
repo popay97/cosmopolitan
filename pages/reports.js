@@ -18,37 +18,36 @@ export async function getServerSideProps(context) {
   };
 }
 
+function GlobalFilter({
+  preGlobalFilteredRows,
+  globalFilter,
+  setGlobalFilter,
+}) {
+  const count = preGlobalFilteredRows.length;
+  const [value, setValue] = React.useState(globalFilter);
+  const onChange = ()=> {
+    setGlobalFilter(value || undefined);
+  };
+  return (
+    <div style={{ width: "100%" }}>
+      Search:{" "}
+      <input
+        style={{ width: "100%" }}
+        value={value || ""}
+        onChange={(e) => {
+          setValue(e.target.value);
+          onChange(e.target.value);
+        }}
+        placeholder={`${count} records...`}
+      />
+    </div>
+  );
+}
 
 function NDayReport({ AllData }) {
   const [data, setData] = React.useState([...AllData]);
   const [filterDy, setFilterDys] = React.useState(4);
   const [filteredData, setFilteredData] = React.useState([]);
-  function GlobalFilter({
-    preGlobalFilteredRows,
-    globalFilter,
-    setGlobalFilter,
-  }) {
-    const count = preGlobalFilteredRows.length;
-    const [value, setValue] = React.useState(globalFilter);
-    const onChange = useAsyncDebounce((value) => {
-      setGlobalFilter(value || undefined);
-    }, 200);
-  
-    return (
-      <div style={{ width: "100%" }}>
-        Search:{" "}
-        <input
-          style={{ width: "100%" }}
-          value={value || ""}
-          onChange={(e) => {
-            setValue(e.target.value);
-            onChange(e.target.value);
-          }}
-          placeholder={`${count} records...`}
-        />
-      </div>
-    );
-  }
   
   const columns = React.useMemo(
     () => [
@@ -167,18 +166,12 @@ function NDayReport({ AllData }) {
   const filterData = () => {
     //set data array to contain only objects that less then filter days away from today
     setFilteredData([
-      ...data.filter((item) => {
-        let searchFlag = true;
-        if (filterWord != "") {
-          let arr = Object.values(item);
-          let str = arr.join(" ").toLowerCase();
-          searchFlag = str.includes(filterWord.toLowerCase());
-        }
+      ...data.filter((item) => {       
         const date = new Date(item.arrivalDate);
         const today = new Date();
         const diff = Math.abs(date.getTime() - today.getTime());
         const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-        return diffDays <= filterDy && searchFlag;
+        return diffDays <= filterDy
       }),
     ]);
   };
