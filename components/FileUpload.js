@@ -25,7 +25,7 @@ function fileUpload() {
   const handleOnSubmit = async () => {
     console.log(obj)
     if (obj.length > 0) {
-      await axios.post('/api/csv', obj).then((res) =>{
+      await axios.post('/api/v1/csv', obj).then((res) =>{
           window.alert(`${res.data.created} created, ${res.data.updated} updated, ${res.data.errors} errors`)
       }).catch(err =>{  
         window.alert(`${err.response.data.created} created, ${err.response.data.updated} updated, ${err.response.data.message}`)
