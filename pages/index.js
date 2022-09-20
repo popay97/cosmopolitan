@@ -54,7 +54,7 @@ function Login({isConnected}) {
         <link rel="icon" href="/favicon.ico" />
         </Head>
             <main className='login-form'>
-                <h1>Cosmopolitan Mnagement Panel</h1>
+                <h1>Cosmopolitan Management Panel</h1>
                 <h2>Login</h2>
                 <div className ='form-field'>
                 <input type='text' id='username' value={username} placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
