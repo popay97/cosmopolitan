@@ -7,6 +7,9 @@ function fileUpload() {
   const [file, setFile] = useState();
   const [obj, setObj] = useState([]);
   const hiddenFileInput = useRef(null);
+
+
+  
   const changeHandler = async (event) => {
     if (event.target.files[0]) {
       setFile(event.target.files[0]);

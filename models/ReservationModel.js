@@ -45,7 +45,7 @@ const ReservationSchema = new Schema({
     accom: String,
     resort: String,
     price: Number,
-},{collection:"reservation",Strings:true,validateBeforeSave:false});
+},{collection:"reservation",Strings:true,validateBeforeSave:false, timestamps:true});
 
 ReservationSchema.set('toObject', {virtuals: true});
 ReservationSchema.set('toJSON', {virtuals: true});
