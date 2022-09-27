@@ -114,27 +114,13 @@ export default function Home({ isConnected }) {
             font-size: 2rem;
           }
 
-          .description {
-            line-height: 1.5;
-            font-size: 1.5rem;
-          }
-
-          code {
-            background: #fafafa;
-            border-radius: 5px;
-            padding: 0.75rem;
-            font-size: 1.1rem;
-            font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-              DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-          }
-
           .grid {
             display: flex;
             align-items: flex-start;
             justify-content: center;
             flex-wrap: wrap;
             max-width: 800px;
-            margin-top: 3rem;
+            margin-top: 2.5rem;
           }
 
           .card {
@@ -142,6 +128,7 @@ export default function Home({ isConnected }) {
             flex-basis: 45%;
             padding: 1.5rem;
             text-align: left;
+            min-height: 150px;
             color: inherit;
             text-decoration: none;
             border: 1px solid #eaeaea;
