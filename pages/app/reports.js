@@ -490,7 +490,7 @@ function NDayReport({ AllData, airports }) {
           .control-panel {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: space-evenly;
             align-items: center;
             margin-left: 40px;
             margin-right: 40px;
