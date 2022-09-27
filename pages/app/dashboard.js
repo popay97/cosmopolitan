@@ -1,6 +1,7 @@
 import Head from "next/head";
 import FileComponent from "../../components/FileUpload";
 import React from "react";
+import jwt from 'jsonwebtoken';
 
 export default function Home({ isConnected }) {
     React.useEffect(() => {

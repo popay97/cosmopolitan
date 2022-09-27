@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import Reservation from "../../models/ReservationModel";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
+import jwt from 'jsonwebtoken';
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import {
   dateBetweenFilterFn,
@@ -45,7 +46,6 @@ function NDayReport({ AllData, airports }) {
         window.location.href = "/";
     }
 }, [])
-  const [data, setData] = React.useState([...AllData]);
   const [dateBetween, setDateBetween] = React.useState([]);
   const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
   const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
