@@ -26,7 +26,7 @@ function Login({isConnected}) {
         try{
         const loginPost = await axios.post('/api/authenticate', {username: username, password: password })
         if(loginPost.data.access_token){
-            localStorage.setItem('token', loginPost.data.access_token);
+            localStorage.setItem('cosmo_token', loginPost.data.access_token);
             const user = jwt.decode(loginPost.data.access_token);
             localStorage.setItem('user', JSON.stringify(user.username));
             localStorage.setItem('isAdmin', JSON.stringify(user.isAdmin));

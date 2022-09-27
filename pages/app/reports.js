@@ -37,6 +37,14 @@ export async function getServerSideProps(context) {
 }
 
 function NDayReport({ AllData, airports }) {
+  React.useEffect(() => {
+    const token = localStorage.getItem("cosmo_token");
+    const user = jwt.decode(token);
+    console.log(user);
+    if (!token) {
+        window.location.href = "/";
+    }
+}, [])
   const [data, setData] = React.useState([...AllData]);
   const [dateBetween, setDateBetween] = React.useState([]);
   const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
@@ -482,7 +490,7 @@ function NDayReport({ AllData, airports }) {
           .control-panel {
             display: flex;
             flex-direction: row;
-            justify-content: space-evenly;
+            justify-content: space-between;
             align-items: center;
             margin-left: 40px;
             margin-right: 40px;

@@ -6,6 +6,14 @@ import Button from "react-bootstrap/Button";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "../../components/Navbar";
 function ManageUsers() {
+  React.useEffect(() => {
+    const token = localStorage.getItem("cosmo_token");
+    const user = jwt.decode(token);
+    console.log(user);
+    if (!token) {
+        window.location.href = "/";
+    }
+}, [])
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isAdmin, setIsAdmin] = React.useState(false);

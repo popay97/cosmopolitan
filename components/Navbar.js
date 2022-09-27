@@ -3,7 +3,7 @@ import React from 'react'
 function Navbar() {
   return (
     <div className="navbar">
-        <h1>Cosmpolitan Control Panel</h1>
+        <h1>Cosmopolitan Management Panel</h1>
         <style jsx>{`
 
             .navbar {

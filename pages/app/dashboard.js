@@ -3,6 +3,15 @@ import FileComponent from "../../components/FileUpload";
 import React from "react";
 
 export default function Home({ isConnected }) {
+    React.useEffect(() => {
+        const token = localStorage.getItem("cosmo_token");
+        const user = jwt.decode(token);
+        console.log(user);
+        if (!token) {
+            window.location.href = "/";
+        }
+    }, [])
+
     return (
       <div className="container">
         <Head>
