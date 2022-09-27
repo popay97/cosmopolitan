@@ -22,7 +22,9 @@ export default function Home({ isConnected }) {
               <h3>Reports &rarr;</h3>
             </div>
 
-            <div className="card">
+            <div className="card" onClick={() => {
+              window.location.href = "/app/manageUsers"
+            }} style={{cursor: "pointer"}}>
               <h3>Registruj novog korisnika &rarr;</h3>
             </div>
 

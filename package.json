@@ -9,6 +9,7 @@
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.2.1",
     "ftp": "^0.3.10",
     "gpg": "^0.6.0",
     "jsonwebtoken": "^8.5.1",
@@ -19,7 +20,9 @@
     "openpgp": "^5.3.0",
     "papaparse": "^5.3.2",
     "react": "^17.0.2",
+    "react-bootstrap": "^2.5.0",
     "react-dom": "^17.0.2",
+    "react-export-table-to-excel": "^1.0.6",
     "react-select": "^5.3.2",
     "react-table": "^7.8.0",
     "regenerator-runtime": "^0.13.9"

@@ -1,6 +1,10 @@
 import bcrypt from 'bcryptjs';
-import User from '../../../models/UserModel.js';
+import User from '../../../models/UserModel';
+import mongoose,{model} from 'mongoose'
+import dbConnect from '../../../lib/dbConnect.js';
+
 export default async function handler(req, res) {
+    await dbConnect();
     const { username, password, isAdmin, isSubcontractor,subcontractorCountry } = req.body;
     const user = await User.findOne({ userName: username });
     if (user) {

@@ -1,129 +1,193 @@
-import React, { useEffect } from "react";
+import React, { useRef } from "react";
 import Reservation from "../../models/ReservationModel";
 import Head from "next/head";
-import Select from "react-select";
 import Navbar from "../../components/Navbar";
+import { DownloadTableExcel } from "react-export-table-to-excel";
 import {
-  useTable,
-  usePagination,
-  useAsyncDebounce,
-  useGlobalFilter,
-} from "react-table";
+  dateBetweenFilterFn,
+  dateBetweenArrFn,
+  dateBetweenDepFn,
+  countryFilterFn,
+} from "../../components/filterHnadlers";
+import { useTable, usePagination, useFilters } from "react-table";
 
 export async function getServerSideProps(context) {
   const getData = await Reservation.find({}).lean();
-  const AllData = JSON.parse(JSON.stringify(getData));
+  const data = JSON.parse(JSON.stringify(getData));
+  let airports = [];
+  let AllData = data.filter((r) => {
+    if (r.status == "CANCELLED") {
+      return false;
+    } else {
+      if (
+        airports.indexOf(r.arrivalAirport) === -1 &&
+        r.arrivalAirport != undefined &&
+        r.arrivalAirport != null &&
+        r.arrivalAirport != ""
+      ) {
+        airports.push(r.arrivalAirport);
+      }
+      return true;
+    }
+  });
+
   return {
-    props: { AllData },
+    props: { AllData, airports },
   };
 }
 
-function GlobalFilter({
-  preGlobalFilteredRows,
-  globalFilter,
-  setGlobalFilter,
-}) {
-  const count = preGlobalFilteredRows.length;
-  const [value, setValue] = React.useState(globalFilter);
-  const onChange = ()=> {
-    setGlobalFilter(value || undefined);
-  };
-  return (
-    <div style={{ width: "100%" }}>
-      Search:{" "}
-      <input
-        style={{ width: "100%" }}
-        value={value || ""}
-        onChange={(e) => {
-          setValue(e.target.value);
-          onChange(e.target.value);
-        }}
-        placeholder={`${count} records...`}
-      />
-    </div>
-  );
-}
-
-function NDayReport({ AllData }) {
+function NDayReport({ AllData, airports }) {
   const [data, setData] = React.useState([...AllData]);
-  const [filterDy, setFilterDys] = React.useState(4);
-  const [filteredData, setFilteredData] = React.useState([]);
-  
+  const [dateBetween, setDateBetween] = React.useState([]);
+  const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
+  const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
+  const [country, setCountry] = React.useState("all");
+  const tableRef = useRef(null);
+  const filterTypes = React.useMemo(
+    () => ({
+      dateBetweenDep: dateBetweenDepFn,
+      dateBetweenArr: dateBetweenArrFn,
+      dateBetweenFn: dateBetweenFilterFn,
+      text: (rows, id, filterValue) => {
+        return rows.filter((row) => {
+          const rowValue = row.values[id];
+          return rowValue !== undefined
+            ? String(rowValue)
+                .toLowerCase()
+                .startsWith(String(filterValue).toLowerCase())
+            : true;
+        });
+      },
+    }),
+    []
+  );
+
   const columns = React.useMemo(
     () => [
       {
         Header: "Reservation ID",
         accessor: "resId",
+        canFilter: false,
       },
       {
         Header: "Title",
         accessor: "title",
+        canFilter: false,
       },
       {
         Header: "First Name",
         accessor: "name",
+        canFilter: false,
       },
       {
         Header: "Last Name",
         accessor: "surname",
+        canFilter: false,
       },
       {
         Header: "Phone",
         accessor: (row) => row.phone.replace(" ", ""),
+        canFilter: false,
       },
       {
         Header: "Booking Date",
-        accessor: (row) => row.booked.split("T")[0],
+        accessor: "booked",
+        Cell: ({ value }) => {
+          const date = value.split("T")[0];
+          return date;
+        },
+        filter: dateBetweenFilterFn,
+        canFilter: true,
       },
       {
         Header: "Arrival Airport",
         accessor: "arrivalAirport",
+        filterType: "text",
+        canFilter: true,
       },
       {
         Header: "Arrival Date",
-        accessor: (row) => row.arrivalDate.split("T")[0],
+        accessor: "arrivalDate",
+        Cell: ({ value }) => {
+          const date = value.split("T")[0];
+          return date;
+        },
+        filter: dateBetweenArrFn,
+        canFilter: false,
       },
       {
         Header: "Arrival Flight",
-        accessor: (row) =>
-          row.arrivalFlight.number +
-          " " +
-          row.arrivalDate.split("T")[1].slice(0, 5) +
-          " " +
-          row.arrivalAirport +
-          " - " +
-          row.departureFlight.arrAirport,
+        accessor: "arrivalFlight",
+        Cell: (props) => {
+          return (
+            props.row.original.arrivalFlight.number +
+            " " +
+            props.row.original.arrivalDate?.split("T")[1].slice(0, 5) +
+            " " +
+            props.row.original.departureFlight.arrAirport +
+            " - " +
+            props.row.original.arrivalAirport
+          );
+        },
+        filter: countryFilterFn,
+        canFilter: true,
       },
       {
         Header: "Departure Date",
-        accessor: (row) => row.depDate.split("T")[0],
+        accessor: "depDate",
+        Cell: ({ value }) => {
+          const date = value.split("T")[0];
+          return date;
+        },
+        filter: dateBetweenDepFn,
+        canFilter: true,
       },
       {
         Header: "Departure Flight",
         accessor: (row) =>
           row.departureFlight.number +
           " " +
-          row.depDate.split("T")[1].slice(0, 5) +
+          row.depDate?.split("T")[1].slice(0, 5) +
           " " +
-          row.departureFlight.arrAirport +
+          row.arrivalAirport +
           " - " +
-          row.arrivalAirport,
+          row.departureFlight.arrAirport,
+        canFilter: false,
       },
       {
-        Header: " Transfer Type",
+        Header: "Transfer Type",
         accessor: (row) => row.transfer,
+        canFilter: false,
+      },
+      {
+        Header: "Adults",
+        accessor: (row) => row.adults,
+        canFilter: false,
+      },
+      {
+        Header: "Children",
+        accessor: (row) => row.children,
+        canFilter: false,
+      },
+      {
+        Header: "Infants",
+        accessor: (row) => row.infants,
+        canFilter: false,
       },
       {
         Header: "Accomodation",
         accessor: (row) => row.accom,
+        canFilter: false,
       },
       {
         Header: "Accom Cd",
         accessor: (row) => row.accomCd,
+        canFilter: false,
       },
       {
         Header: "Resort",
         accessor: (row) => row.resort,
+        canFilter: false,
       },
     ],
     []
@@ -141,44 +205,32 @@ function NDayReport({ AllData }) {
     pageCount,
     gotoPage,
     nextPage,
+    setFilter,
     previousPage,
-    visibleColumns,
-    preGlobalFilteredRows,
-    setGlobalFilter,
     state: { pageIndex, pageSize },
   } = useTable(
     {
       columns: columns,
       data: AllData,
+      filterTypes,
       initialState: { pageIndex: 0, pageSize: 8 },
     },
-    useGlobalFilter,
+    useFilters,
     usePagination
   );
 
-  const options = [
-    { value: 4.7, label: "4 dana" },
-    { value: 7.7, label: "7 dana" },
-    { value: 10.7, label: "10 dana" },
-    { value: 15.7, label: "15 dana" },
-    { value: 30.7, label: "30 dana" },
-  ];
-  const filterData = () => {
-    //set data array to contain only objects that less then filter days away from today
-    setFilteredData([
-      ...data.filter((item) => {       
-        const date = new Date(item.arrivalDate);
-        const today = new Date();
-        const diff = Math.abs(date.getTime() - today.getTime());
-        const diffDays = Math.ceil(diff / (1000 * 3600 * 24));
-        return diffDays <= filterDy
-      }),
-    ]);
-  };
-  useEffect(() => {
-    filterData();
-  }, [filterDy, data]);
-
+  React.useEffect(() => {
+    setFilter("booked", dateBetween);
+  }, [dateBetween]);
+  React.useEffect(() => {
+    setFilter("arrivalDate", dateBetweenArr);
+  }, [dateBetweenArr]);
+  React.useEffect(() => {
+    setFilter("depDate", dateBetweenDep);
+  }, [dateBetweenDep]);
+  React.useEffect(() => {
+    setFilter("arrivalFlight", country);
+  }, [country]);
   return (
     <div className="container">
       <Head>
@@ -189,23 +241,88 @@ function NDayReport({ AllData }) {
         <Navbar />
         <div className="mainframe">
           <div className="control-panel">
-            <label>Broj dana:</label>
-            <Select
-              options={options}
-              defaultValue={options[0]}
-              onChange={(e) => {
-                setFilterDys(e.value);
-              }}
-            />
-            <label>Pretraga:</label>
-            <GlobalFilter
-              preGlobalFilteredRows={preGlobalFilteredRows}
-              globalFilter={state.globalFilter}
-              setGlobalFilter={setGlobalFilter}
-            />
+            <div className="filterColumn">
+              <h3>Booking Date</h3>
+              <label>From:</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  setDateBetween([e.target.value, dateBetween[1]]);
+                }}
+              />
+              <label>to</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  setDateBetween([dateBetween[0], e.target.value]);
+                }}
+              />
+            </div>
+            <div className="filterColumn">
+              <h3>Arrival date:</h3>
+              <label>From:</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  setDateBetweenArr([e.target.value, dateBetweenArr[1]]);
+                }}
+              />
+              <label>to</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  setDateBetweenArr([dateBetweenArr[0], e.target.value]);
+                }}
+              />
+            </div>
+            <div className="filterColumn">
+              <h3>Departure date:</h3>
+              <label>From:</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  setDateBetweenDep([e.target.value, dateBetweenDep[1]]);
+                }}
+              />
+              <label>to</label>
+              <input
+                type="date"
+                onChange={(e) => {
+                  console.log(e.target.value);
+                  setDateBetweenDep([dateBetweenDep[0], e.target.value]);
+                }}
+              />
+            </div>
+            <div className="filterColumn">
+              <h3>Arrival Airport:</h3>
+              <select
+                onChange={(e) => {
+                  setFilter("arrivalAirport", e.target.value || undefined);
+                }}
+              >
+                <option value="">All</option>
+                {airports.map((airport) => (
+                  <option key={airport} value={airport}>
+                    {airport}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="filterColumn">
+              <h3>Country:</h3>
+              <select
+                onChange={(e) => {
+                  setCountry(e.target.value);
+                }}
+              >
+                <option value="all">All</option>
+                <option value="ME">Montenegro</option>
+                <option value="HR">Croatia</option>
+              </select>
+            </div>
           </div>
           <div className="reportPanel">
-            <table {...getTableProps()} className="demTable">
+            <table {...getTableProps()} className="demTable" ref={tableRef}>
               <thead>
                 {headerGroups.map((headerGroup) => (
                   <tr {...headerGroup.getHeaderGroupProps()}>
@@ -274,6 +391,15 @@ function NDayReport({ AllData }) {
                 />
               </span>{" "}
             </div>
+            <div>
+              <DownloadTableExcel
+                filename="report"
+                sheet="trnasfers"
+                currentTableRef={tableRef.current}
+              >
+                <button className="myButton"> Export excel </button>
+              </DownloadTableExcel>
+            </div>
           </div>
         </div>
       </main>
@@ -293,7 +419,9 @@ function NDayReport({ AllData }) {
             border: 1px outset #b3adad;
             border-collapse: separate;
             border-spacing: 2px;
+            padding: 3px;
             border-radius: 5px;
+            margin-bottom: 20px;
             box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em,
               rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em,
               rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
@@ -318,12 +446,12 @@ function NDayReport({ AllData }) {
           }
           .mainframe {
             display: flex;
-            flex-direction: row;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             width: 100%;
-            height: 100%;
-            padding: 10px;
+            min-height: 100vh;
+            padding: 2px;
           }
           .container {
             min-height: 100vh;
@@ -339,21 +467,33 @@ function NDayReport({ AllData }) {
             flex-direction: column;
             justify-content: start;
             align-items: start;
-            width: 90%;
-            height: 85vh;
+            width: 100%;
+            min-height: 85vh;
+            padding: 10px;
+          }
+          .filterColumn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 10vh;
             padding: 10px;
           }
           .control-panel {
             display: flex;
-            flex-direction: column;
-            justify-content: start;
+            flex-direction: row;
+            justify-content: space-evenly;
             align-items: center;
-            width: 10%;
-            height: 85vh;
-            padding-left: 10px;
+            margin-left: 40px;
+            margin-right: 40px;
+            width: 100%;
+          }
+          .pagination {
+            margin-bottom: 15px;
           }
           main {
             display: flex;
+            widrt: 100%;
             height: 100%;
             flex-direction: column;
             justify-content: start;

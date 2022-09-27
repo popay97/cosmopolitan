@@ -9,7 +9,7 @@ function Navbar() {
             .navbar {
                 display: flex;
                 flex-direction: row;
-                justify-content:center;
+                justify-content: center;
                 width: 100%;
                 height: 70px;
                 background: #ffffff;

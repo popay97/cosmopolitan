@@ -1,10 +1,9 @@
 import bcrypt from 'bcryptjs';
 import User from '../../models/UserModel.js';
 import jwt from 'jsonwebtoken';
-
 export default async function handler(req, res) {
     const { username, password } = req.body;
-    const user = await User.findOne({ userName: username });
+    const user = await User.findOne({ userName: username }).lean();
     if (!user) {
         return res.status(401).json({ message: 'Invalid username or password' });
     }
@@ -12,7 +11,7 @@ export default async function handler(req, res) {
     if (!isValidPassword) {
         return res.status(401).json({ message: 'Invalid username or password' });
     }
-    const token = jwt.sign(JSON.parse(user), process.env.JWT_SECRET);
+    const token = jwt.sign(user, process.env.JWT_SECRET);
     return res.status(200).json({access_token: token});
 }
   

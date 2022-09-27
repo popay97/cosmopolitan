@@ -19,7 +19,7 @@ const UserSchema = new Schema({
     subcontractorCountry:{
         type: String
     },
-},{collection:"User",Strings:true,validateBeforeSave:false, timestamps:true});
+},{collection:"user",Strings:true,validateBeforeSave:false, timestamps:true});
 
 UserSchema.set('toObject', {virtuals: true});
 UserSchema.set('toJSON', {virtuals: true});

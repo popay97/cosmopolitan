@@ -23,8 +23,8 @@ function Login({isConnected}) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(username, password);
-        /*const loginPost = await axios.post('/api/authenticate', {username: username, password: password })
+        try{
+        const loginPost = await axios.post('/api/authenticate', {username: username, password: password })
         if(loginPost.data.access_token){
             localStorage.setItem('token', loginPost.data.access_token);
             const user = jwt.decode(loginPost.data.access_token);
@@ -37,16 +37,12 @@ function Login({isConnected}) {
         }
         else{
             window.alert(`${loginPost.data.message}`);
-    }*/
-    if(username === 'admin' && password === 'admin'){
-        localStorage.setItem('token', 'admin');
-        localStorage.setItem('user', 'admin');
-        localStorage.setItem('isAdmin', true);
-        localStorage.setItem('isSubcontractor', false);
-        localStorage.setItem('subcontractorCountry', 'ME');
-        window.location.href = '/app/dashboard';
-    }
-    }
+        }
+        }
+    catch(e){
+        console.log(e);
+    window.alert('Something went wrong, please try again later');
+    }}
     return (
         <div className='container'>
         <Head>
