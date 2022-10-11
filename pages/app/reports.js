@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import Reservation from "../../models/ReservationModel";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import {
   dateBetweenFilterFn,
@@ -17,7 +17,7 @@ export async function getServerSideProps(context) {
   const data = JSON.parse(JSON.stringify(getData));
   let airports = [];
   let AllData = data.filter((r) => {
-    if (r.status == "CANCELLED") {
+    if (r.status == "CANCELLED" || r.booked === undefined) {
       return false;
     } else {
       if (
@@ -41,14 +41,14 @@ function NDayReport({ AllData, airports }) {
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
-    console.log(user);
     if (!token) {
-        window.location.href = "/";
+      window.location.href = "/";
     }
-}, [])
+  }, []);
   const [dateBetween, setDateBetween] = React.useState([]);
   const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
   const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
+  const [pageLength, setPageLength] = React.useState(8);
   const [country, setCountry] = React.useState("all");
   const tableRef = useRef(null);
   const filterTypes = React.useMemo(
@@ -94,14 +94,17 @@ function NDayReport({ AllData, airports }) {
       },
       {
         Header: "Phone",
-        accessor: (row) => row.phone.replace(" ", ""),
+        accessor: "phone",
+        Cell: ({ value }) => {
+          return value.replace(" ", "").toLowerCase();
+        },
         canFilter: false,
       },
       {
         Header: "Booking Date",
         accessor: "booked",
         Cell: ({ value }) => {
-          const date = value.split("T")[0];
+          const date = value != undefined ? value.split("T")[0] : undefined;
           return date;
         },
         filter: dateBetweenFilterFn,
@@ -117,7 +120,7 @@ function NDayReport({ AllData, airports }) {
         Header: "Arrival Date",
         accessor: "arrivalDate",
         Cell: ({ value }) => {
-          const date = value.split("T")[0];
+          const date = value != undefined ? value.split("T")[0] : undefined;
           return date;
         },
         filter: dateBetweenArrFn,
@@ -144,7 +147,7 @@ function NDayReport({ AllData, airports }) {
         Header: "Departure Date",
         accessor: "depDate",
         Cell: ({ value }) => {
-          const date = value.split("T")[0];
+          const date = value != undefined ? value.split("T")[0] : undefined;
           return date;
         },
         filter: dateBetweenDepFn,
@@ -200,7 +203,7 @@ function NDayReport({ AllData, airports }) {
     ],
     []
   );
-  const {
+  var {
     getTableProps,
     getTableBodyProps,
     headerGroups,
@@ -221,12 +224,11 @@ function NDayReport({ AllData, airports }) {
       columns: columns,
       data: AllData,
       filterTypes,
-      initialState: { pageIndex: 0, pageSize: 8 },
+      initialState: { pageIndex: 0, pageSize: pageLength },
     },
     useFilters,
     usePagination
   );
-
   React.useEffect(() => {
     setFilter("booked", dateBetween);
   }, [dateBetween]);
@@ -239,6 +241,19 @@ function NDayReport({ AllData, airports }) {
   React.useEffect(() => {
     setFilter("arrivalFlight", country);
   }, [country]);
+  React.useEffect(() => {
+    state.pageSize = pageLength;
+    document.getElementById("right").click();
+    setTimeout(() => {
+      document.getElementById("left").click();
+    }, 300);
+    if (pageLength == AllData.length + 1) {
+      setTimeout(() => {
+        document.getElementById("download-report").click();
+        window.location.reload();
+      }, 500);
+    }
+  }, [pageLength]);
   return (
     <div className="container">
       <Head>
@@ -253,6 +268,7 @@ function NDayReport({ AllData, airports }) {
               <h3>Booking Date</h3>
               <label>From:</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   setDateBetween([e.target.value, dateBetween[1]]);
@@ -260,6 +276,7 @@ function NDayReport({ AllData, airports }) {
               />
               <label>to</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   setDateBetween([dateBetween[0], e.target.value]);
@@ -270,6 +287,7 @@ function NDayReport({ AllData, airports }) {
               <h3>Arrival date:</h3>
               <label>From:</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   setDateBetweenArr([e.target.value, dateBetweenArr[1]]);
@@ -277,6 +295,7 @@ function NDayReport({ AllData, airports }) {
               />
               <label>to</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   setDateBetweenArr([dateBetweenArr[0], e.target.value]);
@@ -287,6 +306,7 @@ function NDayReport({ AllData, airports }) {
               <h3>Departure date:</h3>
               <label>From:</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   setDateBetweenDep([e.target.value, dateBetweenDep[1]]);
@@ -294,6 +314,7 @@ function NDayReport({ AllData, airports }) {
               />
               <label>to</label>
               <input
+                className="filter-input"
                 type="date"
                 onChange={(e) => {
                   console.log(e.target.value);
@@ -330,7 +351,13 @@ function NDayReport({ AllData, airports }) {
             </div>
           </div>
           <div className="reportPanel">
-            <table {...getTableProps()} className="demTable" ref={tableRef}>
+            <table
+              {...getTableProps()}
+              className="demTable"
+              ref={tableRef}
+              id="main-table"
+              key={pageLength}
+            >
               <thead>
                 {headerGroups.map((headerGroup) => (
                   <tr {...headerGroup.getHeaderGroupProps()}>
@@ -360,7 +387,11 @@ function NDayReport({ AllData, airports }) {
               </tbody>
             </table>
             <div className="pagination">
-              <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+              <button
+                onClick={() => gotoPage(0)}
+                disabled={!canPreviousPage}
+                id="left"
+              >
                 {"<<"}
               </button>{" "}
               <button
@@ -375,6 +406,7 @@ function NDayReport({ AllData, airports }) {
               <button
                 onClick={() => gotoPage(pageCount - 1)}
                 disabled={!canNextPage}
+                id="right"
               >
                 {">>"}
               </button>{" "}
@@ -400,12 +432,27 @@ function NDayReport({ AllData, airports }) {
               </span>{" "}
             </div>
             <div>
+              <button
+                className="myButton"
+                onClick={() => {
+                  setPageLength(AllData.length + 1);
+                }}
+              >
+                Export excel
+              </button>
               <DownloadTableExcel
                 filename="report"
                 sheet="trnasfers"
                 currentTableRef={tableRef.current}
               >
-                <button className="myButton"> Export excel </button>
+                <button
+                  style={{ display: "none" }}
+                  id="download-report"
+                  className="myButton"
+                >
+                  {" "}
+                  Export excel{" "}
+                </button>
               </DownloadTableExcel>
             </div>
           </div>
