@@ -203,7 +203,7 @@ function NDayReport({ AllData, airports }) {
     ],
     []
   );
-  var {
+  const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
