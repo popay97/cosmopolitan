@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React from "react";
+import React, { useRef } from "react";
 import Reservation from "../../models/ReservationModel";
 import jwt from "jsonwebtoken";
 import TableComponent from "../../components/TableComponent";
@@ -153,7 +153,7 @@ export default function Statistics({
       resortPercentageofTransfersbyAirport[airports[i]]
     );
   }
-
+  const tableRef = useRef(null);
   const columns1 = React.useMemo(
     () => [
       {
@@ -180,7 +180,11 @@ export default function Statistics({
 
       <main>
         <h1 className="title">Statistics</h1>
-        <TableComponent columns={columns1} data={transfersArr}></TableComponent>
+        <TableComponent
+          refValue={tableRef}
+          columns={columns1}
+          data={transfersArr}
+        ></TableComponent>
         <TableComponent
           columns={columns1}
           data={passengersArr}
