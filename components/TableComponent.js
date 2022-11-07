@@ -10,7 +10,7 @@ export default function TableComponent({ columns, data, refValue }) {
 
   return (
     <>
-      <table {...getTableProps()} className="demTable" ref={ref}>
+      <table {...getTableProps()} className="demTable" ref={refValue}>
         <thead>
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>
