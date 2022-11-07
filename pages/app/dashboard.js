@@ -2,6 +2,7 @@ import Head from "next/head";
 import FileComponent from "../../components/FileUpload";
 import React from "react";
 import jwt from "jsonwebtoken";
+import Navbar from "../../components/Navbar";
 
 export default function Home({ isConnected }) {
   React.useEffect(() => {
@@ -21,6 +22,7 @@ export default function Home({ isConnected }) {
       </Head>
 
       <main>
+        <Navbar></Navbar>
         <div className="grid">
           <div className="card">
             <FileComponent />
@@ -52,7 +54,16 @@ export default function Home({ isConnected }) {
             }}
             style={{ cursor: "pointer" }}
           >
-            <h3>Statistike &rarr;</h3>
+            <h3>Statistike po mjesecima &rarr;</h3>
+          </div>
+          <div
+            className="card"
+            onClick={() => {
+              window.location.href = "/app/statisticsByDest";
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>Statistike po po destinacijama &rarr;</h3>
           </div>
         </div>
       </main>

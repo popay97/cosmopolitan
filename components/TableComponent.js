@@ -1,7 +1,7 @@
 import React from "react";
 import { useTable } from "react-table";
 
-export default function TableComponent({ columns, data }) {
+export default function TableComponent({ columns, data, refValue }) {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({
       columns: columns,
@@ -10,7 +10,7 @@ export default function TableComponent({ columns, data }) {
 
   return (
     <>
-      <table {...getTableProps()} className="demTable">
+      <table {...getTableProps()} className="demTable" ref={ref}>
         <thead>
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>
@@ -40,7 +40,7 @@ export default function TableComponent({ columns, data }) {
           .demTable {
             display: block;
             width: 100%;
-            overflow-y: scroll;
+            overflow-y: hidden;
             border: 1px outset #b3adad;
             border-collapse: separate;
             border-spacing: 2px;

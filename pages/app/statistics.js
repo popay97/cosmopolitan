@@ -3,6 +3,7 @@ import React from "react";
 import Reservation from "../../models/ReservationModel";
 import jwt from "jsonwebtoken";
 import TableComponent from "../../components/TableComponent";
+import { DownloadTableExcel } from "react-export-table-to-excel";
 
 export async function getServerSideProps(context) {
   //calculate number of reservations per airport per month for the last 12 months and place in a table
