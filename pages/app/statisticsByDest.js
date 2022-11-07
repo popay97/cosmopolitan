@@ -159,7 +159,7 @@ export default function StatisticsByDest({ airports, resorts }) {
           <button
             className="myButton"
             onClick={() => {
-              if (document.getElementById("download-report") != null) {
+              if (document.getElementById("download-report")) {
                 document.getElementById("download-report").click();
               }
             }}

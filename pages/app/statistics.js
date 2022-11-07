@@ -112,7 +112,6 @@ export async function getServerSideProps(context) {
       }
     }
   }
-  console.log(brojTransfera);
   return {
     props: {
       months: months,
@@ -154,6 +153,7 @@ export default function Statistics({
     );
   }
   const tableRef = useRef(null);
+  const tableRef2 = useRef(null);
   const columns1 = React.useMemo(
     () => [
       {
@@ -170,7 +170,6 @@ export default function Statistics({
     [months]
   );
 
-  console.log(brojPutnika);
   return (
     <div className="container">
       <Head>
@@ -180,15 +179,68 @@ export default function Statistics({
 
       <main>
         <h1 className="title">Statistics</h1>
-        <TableComponent
-          refValue={tableRef}
-          columns={columns1}
-          data={transfersArr}
-        ></TableComponent>
-        <TableComponent
-          columns={columns1}
-          data={passengersArr}
-        ></TableComponent>
+        <div className="tables">
+          <h3>Transferi po destinaciji</h3>
+          <TableComponent
+            refValue={tableRef}
+            columns={columns1}
+            data={transfersArr}
+          ></TableComponent>
+          <button
+            className="myButton"
+            onClick={() => {
+              if (document.getElementById("download-report1")) {
+                document.getElementById("download-report1").click();
+              }
+            }}
+          >
+            Download
+          </button>
+          <DownloadTableExcel
+            filename="report-transferi"
+            sheet="trnasfers"
+            currentTableRef={tableRef.current}
+          >
+            <button
+              style={{ display: "none" }}
+              id="download-report1"
+              className="myButton"
+            >
+              {" "}
+              Export excel{" "}
+            </button>
+          </DownloadTableExcel>
+          <h3>Putnici po destinaciji</h3>
+          <TableComponent
+            id="table2"
+            columns={columns1}
+            data={passengersArr}
+          ></TableComponent>
+          <button
+            className="myButton"
+            onClick={() => {
+              if (document.getElementById("download-report2")) {
+                document.getElementById("download-report2").click();
+              }
+            }}
+          >
+            Download
+          </button>
+          <DownloadTableExcel
+            filename="report-putnici"
+            sheet="passengers"
+            currentTableRef={tableRef2.current}
+          >
+            <button
+              style={{ display: "none" }}
+              id="download-report2"
+              className="myButton"
+            >
+              {" "}
+              Export excel{" "}
+            </button>
+          </DownloadTableExcel>
+        </div>
       </main>
 
       <footer>
@@ -244,11 +296,12 @@ export default function Statistics({
           main {
             display: flex;
             widrt: 100%;
-            height: 90vh;
+            min-height: 90vh;
             flex-direction: column;
             justify-content: start;
             align-items: center;
             padding-bottom: 20px;
+            height: min-content;
           }
 
           footer {
@@ -270,6 +323,13 @@ export default function Statistics({
           .logo {
             width: 3.5rem;
             margin-left: 20px;
+          }
+          .tables {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
           }
         `}
       </style>
