@@ -66,7 +66,8 @@ export default function Accounting() {
         .date-filters {
           display: flex;
           flex-direction: row;
-          justify-content: center;
+          width: 100%;
+          justify-content: space-evenly;
           align-items: center;
         }
         .date-filters > select {
@@ -90,7 +91,6 @@ export default function Accounting() {
           align-items: center;
         }
         .accounting-data > h4 {
-          margin: 0;
           font-size: 1.5rem;
         }
         .accounting-data > h5 {
