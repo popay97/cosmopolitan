@@ -86,7 +86,7 @@ export default function Accounting() {
         .accounting-data {
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: flex-start;
           align-items: center;
         }
         .accounting-data > h4 {
