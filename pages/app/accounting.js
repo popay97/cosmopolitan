@@ -50,8 +50,8 @@ export default function Accounting() {
           <h4>{`Obracun za period od ${startDate} do ${endDate}`}</h4>
           <h5>Number of transfers: 255</h5>
           <h5>Handling fee: 2043.35</h5>
-          <h5>Total: 2043.35</h5>
-          <h5>Total: 7450.92</h5>
+          <h5>Tramsfers total: 5407.35</h5>
+          <h5>Total: 7450.7</h5>
         </div>
       </main>
       <style jsx>{`
