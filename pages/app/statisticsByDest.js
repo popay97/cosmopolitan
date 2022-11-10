@@ -159,36 +159,57 @@ export default function StatisticsByDest({ airports, resorts }) {
           <button
             className="myButton"
             onClick={() => {
-              if (document.getElementById("download-report")) {
-                document.getElementById("download-report").click();
+              if (
+                document.getElementById("download-report-component")
+                  .className !== "empty"
+              ) {
+                document.getElementById("download-report-component").click();
               }
             }}
           >
             Export excel
           </button>
           <DownloadTableExcel
-            filename="report"
+            id="download-report-component"
+            key={displayData.length > 0 ? displayData[0].resort : "empty"}
+            className={displayData.length > 0 ? displayData[0].resort : "empty"}
+            filename={`StatisticsByDest_${airport}_${year}_${month}_${day}`}
             sheet="trnasfers"
             currentTableRef={tableRef.current}
           >
             <button
+              id="download-report-component"
+              key={displayData.length > 0 ? displayData[0].resort : "empty"}
+              className={
+                displayData.length > 0 ? displayData[0].resort : "empty"
+              }
               style={{ display: "none" }}
-              id="download-report"
-              className="myButton"
             >
               {" "}
               Export excel{" "}
             </button>
           </DownloadTableExcel>
         </div>
-        <div className="table">
+        <div className={displayData.length > 0 ? "table" : "empty"}>
           {displayData.length > 0 ? (
             <TableComponent
               columns={columns}
               data={displayData}
               refValue={tableRef}
             />
-          ) : null}
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "100%",
+              }}
+            >
+              <h3>No Data for your filter values</h3>
+            </div>
+          )}
         </div>
         <style jsx>{`
           .main {

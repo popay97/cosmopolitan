@@ -65,6 +65,15 @@ export default function Home({ isConnected }) {
           >
             <h3>Statistike po po destinacijama &rarr;</h3>
           </div>
+          <div
+            className="card"
+            onClick={() => {
+              window.location.href = "/app/accounting";
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>Obracuni &rarr;</h3>
+          </div>
         </div>
       </main>
 
