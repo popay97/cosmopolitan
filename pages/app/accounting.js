@@ -46,13 +46,7 @@ export default function Accounting() {
             }}
           />
         </div>
-        <div className="accounting-data">
-          <h4>{`Obracun za period od ${startDate} do ${endDate}`}</h4>
-          <h5>Number of transfers: 255</h5>
-          <h5>Handling fee: 2043.35</h5>
-          <h5>Tramsfers total: 5407.35</h5>
-          <h5>Total: 7450.7</h5>
-        </div>
+        <div className="accounting-data"></div>
       </main>
       <style jsx>{`
         .container {

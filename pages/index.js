@@ -100,8 +100,6 @@ function Login({ isConnected }) {
           border-radius: 5px;
           padding: 0 10px;
         }
-        .login-form > button {
-        }
       `}</style>
     </div>
   );

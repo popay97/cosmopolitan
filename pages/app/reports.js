@@ -3,6 +3,7 @@ import Reservation from "../../models/ReservationModel";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import {
   dateBetweenFilterFn,
@@ -10,8 +11,14 @@ import {
   dateBetweenDepFn,
   countryFilterFn,
 } from "../../components/filterHnadlers";
-import { useTable, usePagination, useFilters } from "react-table";
-
+import {
+  useTable,
+  usePagination,
+  useFilters,
+  useGlobalFilter,
+  useAsyncDebounce,
+} from "react-table";
+import { TfiReload } from "react-icons/tfi";
 export async function getServerSideProps(context) {
   const getData = await Reservation.find({}).lean();
   const data = JSON.parse(JSON.stringify(getData));
@@ -48,6 +55,7 @@ function NDayReport({ AllData, airports }) {
   const [dateBetween, setDateBetween] = React.useState([]);
   const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
   const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
+  const [allData, setAllData] = React.useState(AllData);
   const [pageLength, setPageLength] = React.useState(8);
   const [country, setCountry] = React.useState("all");
   const tableRef = useRef(null);
@@ -69,6 +77,9 @@ function NDayReport({ AllData, airports }) {
     }),
     []
   );
+  const displayData = React.useMemo(() => {
+    return allData;
+  }, [allData]);
 
   const columns = React.useMemo(
     () => [
@@ -218,17 +229,35 @@ function NDayReport({ AllData, airports }) {
     nextPage,
     setFilter,
     previousPage,
+    preGlobalFilteredRows,
+    setGlobalFilter,
     state: { pageIndex, pageSize },
   } = useTable(
     {
       columns: columns,
-      data: AllData,
+      data: displayData,
       filterTypes,
       initialState: { pageIndex: 0, pageSize: pageLength },
     },
     useFilters,
+    useGlobalFilter,
     usePagination
   );
+  const reloadAllData = () => {
+    setAllData(AllData);
+  };
+  const loadReport = (country, days, transferType) => {
+    const data = {
+      country: country,
+      days: days,
+      transferType: transferType,
+    };
+    axios.post("/api/v1/getTransfers", data).then((res) => {
+      console.log(res.data);
+      setAllData(res.data);
+    });
+  };
+
   React.useEffect(() => {
     setFilter("booked", dateBetween);
   }, [dateBetween]);
@@ -265,21 +294,13 @@ function NDayReport({ AllData, airports }) {
         <div className="mainframe">
           <div className="control-panel">
             <div className="filterColumn">
-              <h3>Booking Date</h3>
-              <label>From:</label>
+              <h3>Search</h3>
+              <label>Search any field</label>
               <input
                 className="filter-input"
-                type="date"
+                type="text"
                 onChange={(e) => {
-                  setDateBetween([e.target.value, dateBetween[1]]);
-                }}
-              />
-              <label>to</label>
-              <input
-                className="filter-input"
-                type="date"
-                onChange={(e) => {
-                  setDateBetween([dateBetween[0], e.target.value]);
+                  setGlobalFilter(e.target.value || undefined);
                 }}
               />
             </div>
@@ -431,7 +452,14 @@ function NDayReport({ AllData, airports }) {
                 />
               </span>{" "}
             </div>
-            <div>
+            <div
+              style={{
+                disply: "flex",
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+            >
               <button
                 className="myButton"
                 onClick={() => {
@@ -454,6 +482,86 @@ function NDayReport({ AllData, airports }) {
                   Export excel{" "}
                 </button>
               </DownloadTableExcel>
+
+              <button
+                style={{ marginLeft: "15px" }}
+                className="myButton"
+                onClick={() => {
+                  if (country === "all") {
+                    window.alert("Please select country");
+                  } else {
+                    loadReport(country, 4, "incoming");
+                  }
+                }}
+              >
+                4 day incoming transfers
+              </button>
+
+              <button
+                style={{ marginLeft: "15px" }}
+                className="myButton"
+                onClick={() => {
+                  if (country === "all") {
+                    window.alert("Please select a country");
+                  } else {
+                    loadReport(country, 4, "outgoing");
+                  }
+                }}
+              >
+                4 day outgoing transfers
+              </button>
+
+              <button
+                style={{ marginLeft: "15px" }}
+                className="myButton"
+                onClick={() => {
+                  if (country === "all") {
+                    window.alert("Please select country");
+                  } else {
+                    loadReport(country, 1, "incoming");
+                  }
+                }}
+              >
+                Today's incoming transfers
+              </button>
+
+              <button
+                style={{ marginLeft: "15px" }}
+                className="myButton"
+                onClick={() => {
+                  if (country === "all") {
+                    window.alert("Please select country");
+                  } else {
+                    loadReport(country, 1, "outgoing");
+                  }
+                }}
+              >
+                Today's outgoing transfers
+              </button>
+              <button
+                style={{ marginLeft: "15px" }}
+                className="myButton"
+                onClick={() => {
+                  reloadAllData();
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-evenly",
+                    alignItems: "center",
+                  }}
+                >
+                  Reload report data{" "}
+                  <TfiReload
+                    style={{
+                      fontSize: "18px",
+                      marginLeft: "8px",
+                    }}
+                  />
+                </div>
+              </button>
             </div>
           </div>
         </div>

@@ -3,8 +3,8 @@ import Head from "next/head";
 import axios from "axios";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import jwt from 'jsonwebtoken';
+import "bootstrap/dist/css/bootstrap.min.css";
+import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
 function ManageUsers() {
   React.useEffect(() => {
@@ -12,9 +12,9 @@ function ManageUsers() {
     const user = jwt.decode(token);
     console.log(user);
     if (!token) {
-        window.location.href = "/";
+      window.location.href = "/";
     }
-}, [])
+  }, []);
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isAdmin, setIsAdmin] = React.useState(false);
@@ -47,39 +47,71 @@ function ManageUsers() {
       <main>
         <Navbar></Navbar>
         <div className="regsiterForm">
-        <h3>Register new user</h3>
-        <Form>
-          <Form.Group className="mb-3" controlId="formBasicEmail">
-            <Form.Label>Username</Form.Label>
-            <Form.Control type="username" placeholder="Username" onChange={(e)=>{setUsername(e.target.value)}}/>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicPassword" >
-            <Form.Label>Password</Form.Label>
-            <Form.Control type="password" placeholder="Password" onChange={(e)=>{setPassword(e.target.value)}}/>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicCheckbox">
-            <Form.Check type="checkbox" label="User is Admin?" onChange={(e) =>{setIsAdmin(e.target.checked); setIsSubcontractor(false); setSubcontractorCountry('')}} disabled={isSubcontractor}/>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="formBasicCheckbox" >
-            <Form.Check type="checkbox" label="User is subcontractor?" disabled={isAdmin} checked={isSubcontractor} onChange={(e) =>{setIsSubcontractor(e.target.checked); setIsAdmin(false)}} />
-          </Form.Group>
-          <Form.Group className="mb-3">
-          <Form.Label>Subcontractor coutry:</Form.Label>
-            <Form.Select
-              type="select"
-              label="Subcontractor country:"
-              defaultValue=""
-              disabled={isAdmin}
-              onChange={(e) =>{setSubcontractorCountry(e.target.value)}}
-            >
-              <option value="ME">Montenegro</option>
-              <option value="HR">Croatia</option>
-            </Form.Select>
-          </Form.Group>
-          <Button variant="primary" type="submit" onClick={handleSubmit}>
-            Submit
-          </Button>
-        </Form>
+          <h3>Register new user</h3>
+          <Form>
+            <Form.Group className="mb-3" controlId="formBasicEmail">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                type="username"
+                placeholder="Username"
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Password"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicCheckbox">
+              <Form.Check
+                type="checkbox"
+                label="User is Admin?"
+                onChange={(e) => {
+                  setIsAdmin(e.target.checked);
+                  setIsSubcontractor(false);
+                  setSubcontractorCountry("");
+                }}
+                disabled={isSubcontractor}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formBasicCheckbox">
+              <Form.Check
+                type="checkbox"
+                label="User is subcontractor?"
+                disabled={isAdmin}
+                checked={isSubcontractor}
+                onChange={(e) => {
+                  setIsSubcontractor(e.target.checked);
+                  setIsAdmin(false);
+                }}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Subcontractor coutry:</Form.Label>
+              <Form.Select
+                type="select"
+                label="Subcontractor country:"
+                defaultValue=""
+                disabled={isAdmin}
+                onChange={(e) => {
+                  setSubcontractorCountry(e.target.value);
+                }}
+              >
+                <option value="ME">Montenegro</option>
+                <option value="HR">Croatia</option>
+              </Form.Select>
+            </Form.Group>
+            <Button variant="primary" type="submit" onClick={handleSubmit}>
+              Submit
+            </Button>
+          </Form>
         </div>
       </main>
 
@@ -105,7 +137,7 @@ function ManageUsers() {
           align-items: center;
           text-align: center;
         }
-        .regsiterForm{
+        .regsiterForm {
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -119,7 +151,7 @@ function ManageUsers() {
           border-top: 1px solid #eaeaea;
           display: flex;
           justify-content: center;
-          align-items: center; 
+          align-items: center;
         }
         .footer-div {
           display: flex;
