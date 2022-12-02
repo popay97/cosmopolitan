@@ -17,7 +17,7 @@ export default function Home() {
     if (!token) {
       window.location.href = "/";
     }
-    updatePricesProcedure();
+    //updatePricesProcedure();
   }, []);
 
   return (
