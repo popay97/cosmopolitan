@@ -1,0 +1,87 @@
+Airport,Destination,Shared,Private<3,Private>3
+DBV,Dubrovnik,7.50 ,45.00 ,67.00 
+DBV,Cavtat,6.50 ,44.00 ,66.00 
+DBV,Lopud ,19.00 ,70.00 ,120.00 
+DBV,Korcula,29.00 ,190.00 ,260.00 
+DBV,Orašac,14.10 ,66.00 ,94.80 
+DBV,Orebić,27.30 ,168.00 ,216.00 
+DBV,Slano,17.10 ,102.00 ,118.80 
+DBV,Babin kuk,7.50 ,45.00 ,67.00 
+DBV,Plat,7.50 ,45.00 ,67.00 
+DBV,Mlini,7.50 ,45.00 ,67.00 
+DBV,Srebreno,7.50 ,45.00 ,67.00 
+DBV,Lapad,7.50 ,45.00 ,67.00 
+DBV,Dubrovnik old town,7.50 ,45.00 ,67.00 
+SPU,Split ,9.00 ,43.00 ,67.00 
+SPU,Sibenik,17.00 ,130.00 ,155.00 
+SPU,Brela,15.00 ,115.00 ,135.00 
+SPU,Baska voda,17.10 ,138.00 ,162.00 
+SPU,Makarska,18.30 ,138.00 ,162.00 
+SPU,Supetar (Brac),23.00 ,200.00 ,225.00 
+SPU,Bol (Brac),23.00 ,200.00 ,225.00 
+SPU,Milna (Brac) ,23.00 ,200.00 ,225.00 
+SPU,Sumartin (Brac),30.00 ,290.00 ,320.00 
+SPU,Postire (Brac),23.00 ,200.00 ,225.00 
+SPU,Ciovo,11.00 ,50.60 ,76.00 
+SPU,Omis,13.50 ,84.00 ,94.80 
+SPU,Podgora,18.90 ,138.00 ,162.00 
+SPU,Podstrana,12.30 ,84.00 ,94.80 
+SPU,Seget Vranjica,11.00 ,50.60 ,76.00 
+SPU,Seget Donji,11.00 ,50.60 ,76.00 
+SPU,Solin,9.30 ,54.00 ,80.40 
+SPU,Trogir,11.00 ,50.60 ,76.00 
+SPU,Tucepi,18.30 ,162.00 ,192.00 
+SPU,Vodice,18.90 ,168.00 ,198.00 
+SPU,Primosten,,,
+SPU,Biograd,,,
+SPU,Stari Grad (Hvar),42.00 ,154.00 ,210.00 
+SPU,Vrboska (Hvar),42.00 ,154.00 ,210.00 
+SPU,Jelsa (Hvar),42.00 ,154.00 ,210.00 
+SPU,Hvar,42.00 ,154.00 ,210.00 
+PUY,Pula,8.00 ,39.00 ,44.00 
+PUY,Rabac,15.00 ,75.00 ,83.00 
+PUY,Porec,15.00 ,88.00 ,105.00 
+PUY,Novigrad,17.50 ,105.00 ,131.00 
+PUY,Buje,18.30 ,162.00 ,174.00 
+PUY,Medulin,9.90 ,48.00 ,72.00 
+PUY,Rovinj,18.30 ,90.00 ,96.00 
+PUY,Umag,18.30 ,162.00 ,174.00 
+PUY,Vrsar,18.30 ,108.00 ,120.00 
+PUY,Fazana,9.90 ,48.00 ,72.00 
+PUY,Labin,15.00 ,75.00 ,83.00 
+ZAD,Starigrad/ Paklenica,,,
+ZAD,Zaton,,,
+ZAD,Petrcane,15.30 ,72.00 ,84.00 
+ZAD,Biograd,17.00 ,80.00 ,95.00 
+ZAD,Borik,,,
+ZAD,Vodice,20.00 ,105.00 ,115.00 
+ZAD,Tisno,,,
+ZAD,Šibenik,25.00 ,140.00 ,190.00 
+ZAD,Zadar,8.50 ,45.00 ,60.00 
+ZAD,Pag Island,30.00 ,110.00 ,185.00 
+ZAD,Novalja,30.00 ,150.00 ,200.00 
+ZAD,RAB island,,250.00 ,312.50 
+ZAD,"Privlaka, Nin",,,
+ZAD,Sv. Filip Jakov,,,
+ZAD,Pakoštane,,,
+ZAD,Primosten,,,
+RJK,Opatija,,,
+RJK,Lovran,,,
+RJK,Krk,,,
+RJK,Malinska,,,
+RJK,Baška,,,
+RJK,Vrbnik,,,
+RJK,Njivice,,,
+TIV,Kotor,12.00 ,35.00 ,55.00 
+TIV,Perast,14.00 ,45.00 ,70.00 
+TIV,Herceg Novi ,20.00 ,52.00 ,97.00 
+TIV,Budva,12.00 ,43.00 ,70.00 
+TIV,Becici,12.00 ,43.00 ,70.00 
+TIV,Petrovac,14.00 ,54.00 ,80.00 
+TIV,Dubrovnik airport,,135.00 ,182.00 
+TIV,Dubrovnik City,,145.00 ,212.00 
+TIV,Tivat,12.00 ,35.00 ,55.00 
+TIV,Porto Montenegro,12.00 ,35.00 ,55.00 
+TIV,Radovici,12.00 ,35.00 ,55.00 
+TIV,Ulcinj,20.00 ,125.00 ,180.00 
+TIV,Igalo,22.00 ,55.00 ,100.00 

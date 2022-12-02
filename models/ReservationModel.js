@@ -1,52 +1,76 @@
-import mongoose,{model,Schema} from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
-const ReservationSchema = new Schema({
-    resId:{
-        type: String
+const ReservationSchema = new Schema(
+  {
+    resId: {
+      type: String,
     },
     status: {
-        type: String
+      type: String,
     },
-    title:{
-        type: String
-    },  
-    name:{
-        type: String
+    title: {
+      type: String,
     },
-    surname:{
-        type: String
+    name: {
+      type: String,
     },
-    phone :{
-        type: String
+    surname: {
+      type: String,
+    },
+    phone: {
+      type: String,
     },
     adults: Number,
     children: Number,
     infants: Number,
     booked: {
-        type: Date
+      type: Date,
     },
     arrivalAirport: {
-        type: String
+      type: String,
     },
     arrivalDate: Date,
     arrivalFlight: {
-        number: String,
-        arrTime: String,
-        depAirport: String,
+      number: String,
+      arrTime: String,
+      depAirport: String,
     },
     depDate: Date,
-    departureFlight:{
-        number: String,
-        arrAirport: String,
-        depTime: String,
+    departureFlight: {
+      number: String,
+      arrAirport: String,
+      depTime: String,
     },
     transfer: String,
     accomCd: String,
     accom: String,
     resort: String,
-    price: Number,
-},{collection:"reservation",Strings:true,validateBeforeSave:false, timestamps:true});
+    billingDestination: String,
+    pricing: {
+      ways: Number,
+      calculated: {
+        type: Boolean,
+        default: false,
+      },
+      incomingInvoice: {
+        total: Number,
+      },
+      outgoingInvoice: {
+        cost: Number,
+        handlingFee: Number,
+        total: Number,
+      },
+    },
+  },
+  {
+    collection: "reservation",
+    Strings: true,
+    validateBeforeSave: false,
+    timestamps: true,
+  }
+);
 
-ReservationSchema.set('toObject', {virtuals: true});
-ReservationSchema.set('toJSON', {virtuals: true});
-export default (mongoose.models.Reservation || mongoose.model("Reservation", ReservationSchema));
+ReservationSchema.set("toObject", { virtuals: true });
+ReservationSchema.set("toJSON", { virtuals: true });
+export default mongoose.models.Reservation ||
+  mongoose.model("Reservation", ReservationSchema);

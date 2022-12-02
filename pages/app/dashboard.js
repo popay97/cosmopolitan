@@ -3,15 +3,21 @@ import FileComponent from "../../components/FileUpload";
 import React from "react";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
+import axios from "axios";
 
-export default function Home({ isConnected }) {
+export default function Home() {
   React.useEffect(() => {
+    const updatePricesProcedure = async () => {
+      const res = await axios.get("/api/v1/updatePricesProcedure");
+      console.log(res);
+    };
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     console.log(user);
     if (!token) {
       window.location.href = "/";
     }
+    updatePricesProcedure();
   }, []);
 
   return (
@@ -35,7 +41,7 @@ export default function Home({ isConnected }) {
             }}
             style={{ cursor: "pointer" }}
           >
-            <h3>Reports &rarr;</h3>
+            <h3>Report/Baza &rarr;</h3>
           </div>
 
           <div

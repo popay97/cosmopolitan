@@ -1,107 +1,229 @@
-import React from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Head from "next/head";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
+import TableComponent from "../../components/TableComponent";
+import axios from "axios";
 
 export default function Accounting() {
-  const [country, setCountry] = React.useState("");
-  const [startDate, setStartDate] = React.useState(new Date());
-  const [endDate, setEndDate] = React.useState(new Date());
-  const [data, setData] = React.useState([]);
-  const [total, setTotal] = React.useState(0);
-  const [handlingFee, setHandlingFee] = React.useState(0);
+  const [year, setYear] = useState(null);
+  const [month, setMonth] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const tableRef = useRef(null);
+
+  const displayData = React.useMemo(() => {
+    return data;
+  }, [data]);
+  const columns = useMemo(
+    () => [
+      {
+        Header: "Reservation ID",
+        accessor: "resId",
+      },
+      {
+        Header: "Title",
+        accessor: "title",
+      },
+      {
+        Header: "First Name",
+        accessor: "name",
+      },
+      {
+        Header: "Last Name",
+        accessor: "surname",
+      },
+      {
+        Header: "Booking Date",
+        accessor: "booked",
+        Cell: ({ value }) => {
+          const date = value != undefined ? value.split("T")[0] : undefined;
+          return date;
+        },
+      },
+      {
+        Header: "Arrival Airport",
+        accessor: "arrivalAirport",
+        filterType: "text",
+      },
+      {
+        Header: "Arrival Date",
+        accessor: "arrivalDate",
+        Cell: ({ value }) => {
+          const date = value != undefined ? value.split("T")[0] : undefined;
+          return date;
+        },
+      },
+      {
+        Header: "Departure Date",
+        accessor: "depDate",
+        Cell: ({ value }) => {
+          const date = value != undefined ? value.split("T")[0] : undefined;
+          return date;
+        },
+      },
+      {
+        Header: "Transfer Type",
+        accessor: (row) => row.transfer,
+      },
+      {
+        Header: "Adults",
+        accessor: (row) => row.adults,
+      },
+      {
+        Header: "Children",
+        accessor: (row) => row.children,
+      },
+      {
+        Header: "Infants",
+        accessor: (row) => row.infants,
+      },
+      {
+        Header: "Accomodation",
+        accessor: (row) => row.accom,
+      },
+      {
+        Header: "Accom Cd",
+        accessor: (row) => row.accomCd,
+      },
+      {
+        Header: "Resort",
+        accessor: (row) => row.billingDestination,
+      },
+      {
+        Header: "Ways",
+        accessor: (row) => row.pricing.ways,
+      },
+      {
+        Header: "Transfer Cost",
+        accessor: (row) => row.pricing.outgoingInvoice.cost,
+      },
+      {
+        Header: "Handling Fee",
+        accessor: (row) => row,
+        Cell: ({ value }) => {
+          // Handling fee is shown only if the transfer is leaving in the selected month
+          const depDate = value.depDate;
+          const depMonth =
+            depDate != undefined ? depDate.split("-")[1] : undefined;
+          if (depMonth === month) {
+            return value.pricing.outgoingInvoice.handlingFee;
+          }
+          return null;
+        },
+      },
+      {
+        Header: "Total Cost",
+        accessor: (row) => row,
+        Cell: ({ value }) => {
+          // Total cost is calculated by multiplying the transfer cost by the number of ways and adding the handling fee
+          const depDate = value.depDate;
+          const depMonth =
+            depDate != undefined ? depDate.split("-")[1] : undefined;
+          if (depMonth === month) {
+            return (
+              value.pricing.outgoingInvoice.cost * value.pricing.ways +
+              value.pricing.outgoingInvoice.handlingFee
+            );
+          }
+          return value.pricing.outgoingInvoice.cost * value.pricing.ways;
+        },
+      },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const token = localStorage.getItem("cosmo_token");
+    const user = jwt.decode(token);
+    console.log(user);
+    if (!token) {
+      window.location.href = "/";
+    }
+  }, []);
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const res = await axios
+        .post("/api/v1/reservations", { year, month })
+        .then((res) => {
+          console.log(res.data);
+          setData(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      setLoading(false);
+    }
+
+    if (year && month) {
+      fetchData();
+    }
+  }, [year, month]);
+
   return (
-    <div className="container">
+    <>
       <Head>
-        <title>Cosmoplitan conrol panel</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>Accounting</title>
       </Head>
-      <main>
-        <Navbar></Navbar>
-        <div className="date-filters">
-          <select
-            name="country"
-            id="country"
-            onChange={(e) => {
-              setCountry(e.target.value);
-            }}
-          >
-            <option value="ME">Montenegro</option>
-            <option value="CRO">Croatia</option>
-          </select>
-          <input
-            type="date"
-            name="date"
-            id="date"
-            onChange={(e) => {
-              setStartDate(e.target.value);
-            }}
-          />
-          <input
-            type="date"
-            name="date"
-            id="date"
-            onChange={(e) => {
-              setEndDate(e.target.value);
-            }}
-          />
+      <Navbar />
+      <div className="container">
+        <div className="filterRow">
+          <div className="filter">
+            <label htmlFor="year">Year</label>
+            <input
+              type="number"
+              name="year"
+              id="year"
+              onChange={(e) => setYear(e.target.value)}
+            />
+          </div>
+          <div className="filter">
+            <label htmlFor="month">Month</label>
+            <input
+              type="number"
+              name="month"
+              id="month"
+              onChange={(e) => setMonth(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="accounting-data"></div>
-      </main>
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          padding: 0 0.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-        .date-filters {
-          display: flex;
-          flex-direction: row;
-          width: 100%;
-          justify-content: space-evenly;
-          align-items: center;
-        }
-        .date-filters > select {
-          width: 100px;
-          height: 45px;
-          border: 1px solid #eaeaea;
-          border-radius: 5px;
-          padding: 0 10px;
-        }
-        .date-filters > input {
-          width: 100px;
-          height: 45px;
-          border: 1px solid #eaeaea;
-          border-radius: 5px;
-          padding: 0 10px;
-        }
-        .accounting-data {
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-          align-items: center;
-        }
-        .accounting-data > h4 {
-          font-size: 1.5rem;
-        }
-        .accounting-data > h5 {
-          margin: 0;
-          font-size: 1rem;
-        }
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          width: 100%;
-          min-height: 100vh;
-          flex-direction: column;
-          justify-content: flex-start;
-          align-items: center;
-        }
-      `}</style>
-    </div>
+        {loading && data.length == 0 ? (
+          <div className="loading">Please select year and month</div>
+        ) : (
+          <TableComponent
+            columns={columns}
+            data={displayData}
+            tableRef={tableRef}
+          />
+        )}
+
+        <style jsx>{`
+          .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+          .filterRow {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+          }
+          .filter {
+            margin: 0 10px;
+          }
+          .loading {
+            font-size: 20px;
+            font-weight: 600;
+          }
+        `}</style>
+      </div>
+    </>
   );
 }
