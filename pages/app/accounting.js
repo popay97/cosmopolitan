@@ -103,11 +103,10 @@ export default function Accounting() {
         Header: "Handling Fee",
         accessor: (row) => row,
         Cell: ({ value }) => {
-          // Handling fee is shown only if the transfer is leaving in the selected month
-          const depDate = value.depDate;
-          const depMonth =
-            depDate != undefined ? depDate.split("-")[1] : undefined;
-          if (depMonth === month) {
+          let objYear = new Date(value.depDate).getFullYear();
+          let objMonth = new Date(value.depDate).getMonth() + 1;
+          if (objYear == year && objMonth == month) {
+            console.log("true");
             return value.pricing.outgoingInvoice.handlingFee;
           }
           return null;
@@ -118,16 +117,15 @@ export default function Accounting() {
         accessor: (row) => row,
         Cell: ({ value }) => {
           // Total cost is calculated by multiplying the transfer cost by the number of ways and adding the handling fee
-          const depDate = value.depDate;
-          const depMonth =
-            depDate != undefined ? depDate.split("-")[1] : undefined;
-          if (depMonth === month) {
+          let objYear = new Date(value.depDate).getFullYear();
+          let objMonth = new Date(value.depDate).getMonth() + 1;
+          if (objYear == year && objMonth == month) {
             return (
-              value.pricing.outgoingInvoice.cost * value.pricing.ways +
-              value.pricing.outgoingInvoice.handlingFee
+              parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways +
+                value.pricing.outgoingInvoice.handlingFee).toFixed(2)
             );
           }
-          return value.pricing.outgoingInvoice.cost * value.pricing.ways;
+          return parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways).toFixed(2);
         },
       },
     ],

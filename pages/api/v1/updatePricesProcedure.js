@@ -36,6 +36,13 @@ export default async (req, res) => {
     // Return the data object.
     return data;
   }
+
+  //update all documents in the database pricing.calculated to false
+  await Reservation.updateMany(
+    { "pricing.calculated": true },
+    { $set: { "pricing.calculated": false } }
+  );
+
   const fs = require("fs");
   const path = require("path");
   const dirRelativeToPublicFolder = "prices";
@@ -152,12 +159,12 @@ export default async (req, res) => {
         continue;
       }
       reservations[i].pricing.outgoingInvoice.handlingFee =
-        reservations[i].adults * handlingFeeAdult +
-        reservations[i].children * handlingFeeChild;
+        parseInt(reservations[i].adults) * handlingFeeAdult +
+        parseInt(reservations[i].children) * handlingFeeChild;
 
       reservations[i].pricing.outgoingInvoice.total =
-        reservations[i].pricing.outgoingInvoice.cost +
-        reservations[i].pricing.outgoingInvoice.handlingFee;
+        parseFloat(reservations[i].pricing.outgoingInvoice.cost) +
+        parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
     } else {
       const prices = incomingNew.find(
         (price) =>
@@ -213,12 +220,12 @@ export default async (req, res) => {
         continue;
       }
       reservations[i].pricing.outgoingInvoice.handlingFee =
-        reservations[i].adults * handlingFeeAdult +
-        reservations[i].children * handlingFeeChild;
+        parseInt(reservations[i].adults) * handlingFeeAdult +
+        parseInt(reservations[i].children) * handlingFeeChild;
 
       reservations[i].pricing.outgoingInvoice.total =
-        reservations[i].pricing.outgoingInvoice.cost +
-        reservations[i].pricing.outgoingInvoice.handlingFee;
+        parseFloat(reservations[i].pricing.outgoingInvoice.cost) +
+        parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
     }
 
     const ways =
