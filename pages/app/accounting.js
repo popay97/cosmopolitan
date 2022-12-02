@@ -105,31 +105,30 @@ export default function Accounting() {
         Cell: ({ value }) => {
           let objYear = new Date(value.depDate).getFullYear();
           let objMonth = new Date(value.depDate).getMonth() + 1;
-          if (objYear == year && objMonth == month) {
-            console.log("true");
+          if (parseInt(objYear) === parseInt(year) && parseInt(objMonth) === parseInt(month)) {
             return value.pricing.outgoingInvoice.handlingFee;
+          } else {
+            return null;
           }
-          return null;
+
         },
       },
       {
         Header: "Total Cost",
         accessor: (row) => row,
         Cell: ({ value }) => {
-          // Total cost is calculated by multiplying the transfer cost by the number of ways and adding the handling fee
           let objYear = new Date(value.depDate).getFullYear();
           let objMonth = new Date(value.depDate).getMonth() + 1;
-          if (objYear == year && objMonth == month) {
+          if (parseInt(objYear) === parseInt(year) && parseInt(objMonth) === parseInt(month)) {
             return (
-              parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways +
-                value.pricing.outgoingInvoice.handlingFee).toFixed(2)
+              parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways + parseFloat(value.pricing.outgoingInvoice.handlingFee)).toFixed(2)
             );
           }
           return parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways).toFixed(2);
         },
       },
     ],
-    []
+    [month, year]
   );
 
   useEffect(() => {

@@ -77,55 +77,62 @@ export default async (req, res) => {
   const outgoingOld = csvToObject(outgoingOldPrices);
   const outgoingNew = csvToObject(outgoingNewPrices);
   const locations = csvToObject(locationData);
-  const reservations = await Reservation.find({
+  const query = await Reservation.find({
     "pricing.calculated": false,
     status: { $ne: "CANCELLED" },
-  }).lean();
+  })
+  const reservations = JSON.parse(JSON.stringify(query));
+
   for (let i = 0; i < reservations.length; i++) {
-    const bookingDate = new Date(reservations[i].booked);
-    const isOldPricing = bookingDate < new Date("2021-09-15");
+    if (reservations[i].booked) {
+      var bookingDate = new Date(reservations[i].booked);
+    }
+    else {
+      errors.push('Invalid reservation in the database');
+      continue;
+    }
+    const isOldPricing =
+      bookingDate.getTime() < new Date("2021-09-15").getTime();
     const numOfPassangers = reservations[i].adults + reservations[i].children;
-    //find location by accomCd from the reservation
     const location = locations.find(
       (location) => location.accomCd === reservations[i].accomCd
     );
     if (!location) {
+      errors.push(`Location not found for accomCD ${reservations[i].accomCd}`,
+      );
+      continue;
+    }
+    if (Object.keys(location).length === 0) {
       errors.push(`Location not found for accomCd: ${reservations[i].accomCd}`);
       continue;
     }
 
     //extract only Resort field
     const resort = location.Resort;
-    //thats out new billingDestination
-    if (resort == "" || resort == null) {
-      console.log("resort is empty");
-      console.log("skiping reservation");
-      //skip this reservation
-      continue;
-    }
+
     //depending on isOldPricing use old or new prices
     reservations[i].billingDestination = resort;
     if (isOldPricing) {
-      const prices = incomingOld.find(
+      const pricesOI = incomingOld.find(
         (price) =>
-          price.Airport === reservations[i].arrivalAirport &&
-          price.Destination === resort
-      )
-      if (prices != null || prices != undefined) {
+          price.Airport.toUpperCase() ===
+          reservations[i].arrivalAirport.toUpperCase() &&
+          price.Destination.toUpperCase() === resort.toUpperCase()
+      );
+      if (pricesOI !== null && pricesOI !== undefined) {
         if (reservations[i].transfer === "STR") {
-          reservations[i].pricing.incomingInvoice.total = prices["Shared"];
+          reservations[i].pricing.incomingInvoice.total = pricesOI["Shared"];
         } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
-          reservations[i].pricing.incomingInvoice.total = prices["Private<3"];
+          reservations[i].pricing.incomingInvoice.total = pricesOI["Private<3"];
         } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
-          reservations[i].pricing.incomingInvoice.total = prices["Private>3"];
+          reservations[i].pricing.incomingInvoice.total = pricesOI["Private>3"];
         } else {
-          console.log("transfer is empty");
-          console.log("skiping reservation");
-          //skip this reservation
+          errors.push(
+            `Transfer PRICE oi not found for reservation: ${reservations[i]._id}`
+          );
           continue;
         }
-      }
-      else {
+      } else {
         console.log("prices is empty");
         console.log("skiping reservation");
         //skip this reservation
@@ -133,12 +140,14 @@ export default async (req, res) => {
       }
       const pricesOutgoing = outgoingOld.find(
         (price) =>
-          price.Airport === reservations[i].arrivalAirport &&
-          price.Destination === resort
+          price.Airport.toUpperCase() ===
+          reservations[i].arrivalAirport.toUpperCase() &&
+          price.Destination.toUpperCase() === resort.toUpperCase()
       );
-      if (pricesOutgoing != null || pricesOutgoing != undefined) {
+      if (pricesOutgoing !== null && pricesOutgoing !== undefined) {
         if (reservations[i].transfer === "STR") {
-          reservations[i].pricing.outgoingInvoice.cost = pricesOutgoing["Shared"];
+          reservations[i].pricing.outgoingInvoice.cost =
+            pricesOutgoing["Shared"];
         } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
           reservations[i].pricing.outgoingInvoice.cost =
             pricesOutgoing["Private<3"];
@@ -146,16 +155,15 @@ export default async (req, res) => {
           reservations[i].pricing.outgoingInvoice.cost =
             pricesOutgoing["Private>3"];
         } else {
-          console.log("transfer is empty");
-          console.log("skiping reservation");
-          //skip this reservation
+          errors.push(
+            `Transfer PRICE OO not found for reservation: ${reservations[i]._id}`
+          );
           continue;
         }
-      }
-      else {
-        console.log("pricesOutgoing is empty");
-        console.log("skiping reservation");
-        //skip this reservation
+      } else {
+        console.log(
+          "prices OO is empty for reservation: " + reservations[i]._id
+        );
         continue;
       }
       reservations[i].pricing.outgoingInvoice.handlingFee =
@@ -168,10 +176,11 @@ export default async (req, res) => {
     } else {
       const prices = incomingNew.find(
         (price) =>
-          price.Airport === reservations[i].arrivalAirport &&
-          price.Destination === resort
+          price.Airport.toUpperCase() ===
+          reservations[i].arrivalAirport.toUpperCase() &&
+          price.Destination.toUpperCase() === resort.toUpperCase()
       );
-      if (prices != null || prices != undefined) {
+      if (prices != null && prices != undefined) {
         if (reservations[i].transfer === "STR") {
           reservations[i].pricing.incomingInvoice.total = prices["Shared"];
         } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
@@ -179,27 +188,29 @@ export default async (req, res) => {
         } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
           reservations[i].pricing.incomingInvoice.total = prices["Private>3"];
         } else {
-          console.log("transfer is empty");
-          console.log("skiping reservation");
+          errors.push(
+            `Transfer PRICE NI not found for reservation: ${reservations[i].accomCd}`
+          );
           //skip this reservation
           continue;
         }
-      }
-      else {
-        console.log("prices is empty");
-        console.log("skiping reservation");
-        //skip this reservation
+      } else {
+        console.log(
+          "prices NI is empty for reservation: " + reservations[i].accomCd
+        );
         continue;
       }
 
       const pricesOutgoing = outgoingNew.find(
         (price) =>
-          price.Airport === reservations[i].arrivalAirport &&
-          price.Destination === resort
+          price.Airport.toUpperCase() ===
+          reservations[i].arrivalAirport.toUpperCase() &&
+          price.Destination.toUpperCase() === resort.toUpperCase()
       );
-      if (pricesOutgoing != null || pricesOutgoing != undefined) {
+      if (pricesOutgoing !== null && pricesOutgoing !== undefined) {
         if (reservations[i].transfer === "STR") {
-          reservations[i].pricing.outgoingInvoice.cost = pricesOutgoing["Shared"];
+          reservations[i].pricing.outgoingInvoice.cost =
+            pricesOutgoing["Shared"];
         } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
           reservations[i].pricing.outgoingInvoice.cost =
             pricesOutgoing["Private<3"];
@@ -207,16 +218,15 @@ export default async (req, res) => {
           reservations[i].pricing.outgoingInvoice.cost =
             pricesOutgoing["Private>3"];
         } else {
-          console.log("transfer is empty");
-          console.log("skiping reservation");
-          //skip this reservation
+          errors.push(
+            `Transfer PRICE NO not found for reservation: ${reservations[i].accomCd}`
+          );
           continue;
         }
-      }
-      else {
-        console.log("pricesOutgoing is empty");
-        console.log("skiping reservation");
-        //skip this reservation
+      } else {
+        console.log(
+          "prices NO is empty for reservation: " + reservations[i].accomCd
+        );
         continue;
       }
       reservations[i].pricing.outgoingInvoice.handlingFee =
@@ -228,11 +238,14 @@ export default async (req, res) => {
         parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
     }
 
+    //update reservation
+    console.log(reservations[i].arrivalDate);
+    console.log(reservations[i].depDate);
+    let arrD = new Date(reservations[i].arrivalDate);
+    let depD = new Date(reservations[i].depDate);
     const ways =
-      new Date(reservations[i].arrivalDate).getMonth() ===
-        new Date(reservations[i].depDate).getMonth() &&
-        new Date(reservations[i].arrivalDate).getFullYear() ===
-        new Date(reservations[i].depDate).getFullYear()
+      arrD.getFullYear() === depD.getFullYear() &&
+        arrD.getMonth() === depD.getMonth()
         ? 2
         : 1;
 
@@ -247,6 +260,7 @@ export default async (req, res) => {
   }
 
   return res.status(200).json({
+    errorArray: errors,
     errors: errors.length > 0 ? errors.length : null,
     updated: updated,
   });

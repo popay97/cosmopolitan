@@ -8,8 +8,9 @@ import axios from "axios";
 export default function Home() {
   React.useEffect(() => {
     const updatePricesProcedure = async () => {
-      const res = await axios.get("/api/v1/updatePricesProcedure");
-      console.log(res);
+      const res = await axios.get("/api/v1/updatePricesProcedure").then((res) => {
+        console.log(res);
+      });
     };
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
