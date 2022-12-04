@@ -15,6 +15,7 @@ export async function getServerSideProps(context) {
   const data = JSON.parse(JSON.stringify(getData));
   let airports = [];
   let resorts = [];
+  let billingDestinations = [];
   let AllData = data.filter((r) => {
     if (
       airports.indexOf(r.arrivalAirport) === -1 &&
@@ -32,67 +33,124 @@ export async function getServerSideProps(context) {
     ) {
       resorts.push(r.resort);
     }
+    if (
+      billingDestinations.indexOf(r.billingDestination) === -1 &&
+      r.billingDestination != undefined &&
+      r.billingDestination != null &&
+      r.billingDestination != ""
+    ) {
+      billingDestinations.push(r.billingDestination);
+    }
     return true;
   });
   return {
-    props: { airports, resorts },
+    props: { airports, resorts, billingDestinations },
   };
 }
 
 
-export default function StatisticsByDest({ airports, resorts }) {
+export default function StatisticsByDest({ airports, resorts, billingDestinations }) {
   const [airport, setAirport] = React.useState(0);
   const [year, setYear] = React.useState(0);
   const [month, setMonth] = React.useState(0);
   const [day, setDay] = React.useState(0);
   const [data, setData] = React.useState([]);
+  const [view, setView] = React.useState("hotel");
 
 
   const columns = React.useMemo(
-    () => [
-      {
-        Header: "Resort",
-        accessor: "resort",
-      },
-      {
-        Header: "Number of Transfers",
-        accessor: "numOfTransfers",
-      },
-      {
-        Header: "Percentage",
-        accessor: "percentage",
-      },
-    ],
-    []
+    () => {
+      if (view === "hotel") {
+        return [
+          {
+            Header: "Hotel",
+            accessor: "resort",
+          },
+          {
+            Header: "Number of Transfers",
+            accessor: "numOfTransfers",
+          },
+          {
+            Header: "Percentage",
+            accessor: "percentage",
+          },
+        ]
+      }
+      else {
+        return [
+          {
+            Header: "Resort",
+            accessor: "billingDestination",
+          },
+          {
+            Header: "Number of Transfers",
+            accessor: "numOfTransfers",
+          },
+          {
+            Header: "Percentage",
+            accessor: "percentage",
+          },
+        ]
+      }
+    },
+    [view]
   );
   const displayData = React.useMemo(() => {
     if (data.length > 0) {
-      let total = data.length;
-      for (let i = 0; i < data.length; i++) {
-        let resort = data[i].resort;
-        if (resorts.indexOf(resort) === -1) {
-          resorts.push(resort);
-        }
-      }
-      let resortData = [];
-      for (let i = 0; i < resorts.length; i++) {
-        let resort = resorts[i];
-        let numOfTransfers = 0;
-        for (let j = 0; j < data.length; j++) {
-          if (data[j].resort === resort) {
-            numOfTransfers++;
+      if (view === "hotel") {
+        let total = data.length;
+        for (let i = 0; i < data.length; i++) {
+          let resort = data[i].resort;
+          if (resorts.indexOf(resort) === -1) {
+            resorts.push(resort);
           }
         }
-        let percentage = ((numOfTransfers / total) * 100).toFixed(2);
-        if (percentage > 0) {
-          resortData.push({ resort, numOfTransfers, percentage });
+        let resortData = [];
+        for (let i = 0; i < resorts.length; i++) {
+          let resort = resorts[i];
+          let numOfTransfers = 0;
+          for (let j = 0; j < data.length; j++) {
+            if (data[j].resort === resort) {
+              numOfTransfers++;
+            }
+          }
+          let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          if (percentage > 0) {
+            resortData.push({ resort, numOfTransfers, percentage });
+          }
         }
+        return resortData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
       }
-      return resortData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
+      else {
+        //do the same but insted of resort do billingDestination
+        let total = data.length;
+        for (let i = 0; i < data.length; i++) {
+          let billingDestination = data[i].billingDestination;
+          if (billingDestinations.indexOf(billingDestination) === -1) {
+            billingDestinations.push(billingDestination);
+          }
+        }
+        let billingDestinationData = [];
+        for (let i = 0; i < billingDestinations.length; i++) {
+          let billingDestination = billingDestinations[i];
+          let numOfTransfers = 0;
+          for (let j = 0; j < data.length; j++) {
+            if (data[j].billingDestination === billingDestination) {
+              numOfTransfers++;
+            }
+          }
+          let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          if (percentage > 0) {
+            billingDestinationData.push({ billingDestination, numOfTransfers, percentage });
+          }
+        }
+        return billingDestinationData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
+      }
     }
+
     return [];
 
-  }, [data]);
+  }, [data, view]);
 
   const handleAirportChange = (event) => {
     setAirport(event.target.value);
@@ -151,8 +209,19 @@ export default function StatisticsByDest({ airports, resorts }) {
             </select>
           </label>
           <label>
+            Stats by:
+            <select value={view} onChange={
+              (event) => {
+                setView(event.target.value);
+              }
+            }>
+              <option value="hotel">Hotel</option>
+              <option value="resort">Resort</option>
+            </select>
+          </label>
+          <label>
             Year:
-            <input type="number" value={year > 2000 && year < 2100 ? year : ''} onChange={handleYearChange} />
+            <input type="number" value={year} onChange={handleYearChange} />
           </label>
           <label>
             Month:

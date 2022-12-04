@@ -36,6 +36,7 @@ export default async (req, res) => {
   try {
     const reservations = await Reservation.find({
       arrivalAirport: destionation,
+      billingDestination: { $ne: null },
       arrivalDate: { $gte: queryStartDate, $lt: queryEndDate },
     }).lean();
     res.status(200).json(reservations);
