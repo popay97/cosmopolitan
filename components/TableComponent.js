@@ -1,7 +1,7 @@
 import React from "react";
 import { useTable } from "react-table";
 
-export default function TableComponent({ columns, data, refValue }) {
+export default function TableComponent({ columns, data, id, refValue }) {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
     useTable({
       columns: columns,
@@ -10,7 +10,7 @@ export default function TableComponent({ columns, data, refValue }) {
 
   return (
     <>
-      <table {...getTableProps()} className="demTable" ref={refValue}>
+      <table {...getTableProps()} id={id} className="demTable" ref={refValue}>
         <thead>
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>

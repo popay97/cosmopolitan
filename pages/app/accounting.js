@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
 import TableComponent from "../../components/TableComponent";
 import axios from "axios";
+import { exportTableToExcel } from "../../lib/exportToExcel";
 
 export default function Accounting() {
   const [year, setYear] = useState(null);
@@ -11,11 +12,12 @@ export default function Accounting() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const tableRef = useRef(null);
 
   const displayData = React.useMemo(() => {
     return data;
   }, [data]);
+
+
   const columns = useMemo(
     () => [
       {
@@ -139,6 +141,8 @@ export default function Accounting() {
       window.location.href = "/";
     }
   }, []);
+
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -159,13 +163,14 @@ export default function Accounting() {
     }
   }, [year, month]);
 
+
   return (
     <>
       <Head>
         <title>Accounting</title>
       </Head>
       <Navbar />
-      <div className="container">
+      <main>
         <div className="filterRow">
           <div className="filter">
             <label htmlFor="year">Year</label>
@@ -185,25 +190,44 @@ export default function Accounting() {
               onChange={(e) => setMonth(e.target.value)}
             />
           </div>
+          <div className='filter'>
+            <button
+              className="myButton"
+              onClick={() => {
+                exportTableToExcel('accounting-table');
+              }}
+            >
+              Export to Excel
+            </button>
+
+          </div>
         </div>
         {loading && data.length == 0 ? (
           <div className="loading">Please select year and month</div>
         ) : (
-          <TableComponent
-            columns={columns}
-            data={displayData}
-            tableRef={tableRef}
-          />
+          <div className='tabelica'>
+            <TableComponent
+              id='accounting-table'
+              columns={columns}
+              data={displayData}
+            />
+          </div>
         )}
 
         <style jsx>{`
-          .container {
-            width: 100%;
-            height: 100%;
-            display: flex;
+          #main{
+            display:flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            width: 100vw;
+          }
+          .tabelica{
+            display: flex;
+            f90vwlex-direction: column;
+            justify-content: center;
+            align-items: center;
+            
           }
           .filterRow {
             display: flex;
@@ -213,14 +237,21 @@ export default function Accounting() {
             margin-bottom: 20px;
           }
           .filter {
-            margin: 0 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            margin: 20px;
           }
           .loading {
             font-size: 20px;
             font-weight: 600;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
           }
         `}</style>
-      </div>
+      </main>
     </>
   );
 }

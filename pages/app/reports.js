@@ -19,24 +19,26 @@ import {
   useAsyncDebounce,
 } from "react-table";
 import { TfiReload } from "react-icons/tfi";
+
+
 export async function getServerSideProps(context) {
-  const getData = await Reservation.find({}).lean();
+  const getData = await Reservation.find({
+    status: { $ne: "CANCELLED" },
+    booked: { $ne: null },
+  }).sort({ arrivalDate: 1 }).lean();
+
   const data = JSON.parse(JSON.stringify(getData));
   let airports = [];
   let AllData = data.filter((r) => {
-    if (r.status == "CANCELLED" || r.booked === undefined) {
-      return false;
-    } else {
-      if (
-        airports.indexOf(r.arrivalAirport) === -1 &&
-        r.arrivalAirport != undefined &&
-        r.arrivalAirport != null &&
-        r.arrivalAirport != ""
-      ) {
-        airports.push(r.arrivalAirport);
-      }
-      return true;
+    if (
+      airports.indexOf(r.arrivalAirport) === -1 &&
+      r.arrivalAirport != undefined &&
+      r.arrivalAirport != null &&
+      r.arrivalAirport != ""
+    ) {
+      airports.push(r.arrivalAirport);
     }
+    return true;
   });
 
   return {
@@ -45,6 +47,8 @@ export async function getServerSideProps(context) {
 }
 
 function NDayReport({ AllData, airports }) {
+
+
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
@@ -52,6 +56,8 @@ function NDayReport({ AllData, airports }) {
       window.location.href = "/";
     }
   }, []);
+
+
   const [dateBetween, setDateBetween] = React.useState([]);
   const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
   const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
@@ -59,6 +65,7 @@ function NDayReport({ AllData, airports }) {
   const [pageLength, setPageLength] = React.useState(8);
   const [country, setCountry] = React.useState("all");
   const tableRef = useRef(null);
+
   const filterTypes = React.useMemo(
     () => ({
       dateBetweenDep: dateBetweenDepFn,
@@ -69,14 +76,15 @@ function NDayReport({ AllData, airports }) {
           const rowValue = row.values[id];
           return rowValue !== undefined
             ? String(rowValue)
-                .toLowerCase()
-                .startsWith(String(filterValue).toLowerCase())
+              .toLowerCase()
+              .startsWith(String(filterValue).toLowerCase())
             : true;
         });
       },
     }),
     []
   );
+
   const displayData = React.useMemo(() => {
     return allData;
   }, [allData]);
@@ -208,12 +216,12 @@ function NDayReport({ AllData, airports }) {
       },
       {
         Header: "Resort",
-        accessor: (row) => row.resort,
-        canFilter: false,
+        accessor: (row) => row.billingDestination,
       },
     ],
     []
   );
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -229,7 +237,6 @@ function NDayReport({ AllData, airports }) {
     nextPage,
     setFilter,
     previousPage,
-    preGlobalFilteredRows,
     setGlobalFilter,
     state: { pageIndex, pageSize },
   } = useTable(
@@ -243,9 +250,11 @@ function NDayReport({ AllData, airports }) {
     useGlobalFilter,
     usePagination
   );
+
   const reloadAllData = () => {
     setAllData(AllData);
   };
+
   const loadReport = (country, days, transferType) => {
     const data = {
       country: country,
@@ -261,15 +270,19 @@ function NDayReport({ AllData, airports }) {
   React.useEffect(() => {
     setFilter("booked", dateBetween);
   }, [dateBetween]);
+
   React.useEffect(() => {
     setFilter("arrivalDate", dateBetweenArr);
   }, [dateBetweenArr]);
+
   React.useEffect(() => {
     setFilter("depDate", dateBetweenDep);
   }, [dateBetweenDep]);
+
   React.useEffect(() => {
     setFilter("arrivalFlight", country);
   }, [country]);
+
   React.useEffect(() => {
     state.pageSize = pageLength;
     document.getElementById("right").click();
@@ -283,6 +296,7 @@ function NDayReport({ AllData, airports }) {
       }, 500);
     }
   }, [pageLength]);
+
   return (
     <div className="container">
       <Head>
@@ -478,8 +492,7 @@ function NDayReport({ AllData, airports }) {
                   id="download-report"
                   className="myButton"
                 >
-                  {" "}
-                  Export excel{" "}
+                  Export excel
                 </button>
               </DownloadTableExcel>
 

@@ -1,16 +1,21 @@
 import Head from "next/head";
-import React, { useRef } from "react";
+import React from "react";
 import jwt from "jsonwebtoken";
 import TableComponent from "../../components/TableComponent";
-import { DownloadTableExcel } from "react-export-table-to-excel";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
+import { exportTableToExcel } from "../../lib/exportToExcel";
+
 
 export default function Statistics() {
   const [months, setMonths] = React.useState([]);
   const [transfersArr, setTransfersArr] = React.useState([]);
   const [passengersArr, setPassengersArr] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [yearPort, setYearPort] = React.useState(0);
+  const [monthPort, setMonthPort] = React.useState(0);
+  const [yearDest, setYearDest] = React.useState(0);
+  const [monthDest, setMonthDest] = React.useState(0);
 
   const fetchTransfers = async (year, month) => {
     let reqobj;
@@ -40,6 +45,15 @@ export default function Statistics() {
       setLoading(false);
     });
   };
+  let displayTransfers = React.useMemo(() => {
+    return transfersArr;
+  }, [transfersArr]);
+
+
+  let displayPassengers = React.useMemo(() => {
+    return passengersArr;
+  }, [passengersArr]);
+
 
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
@@ -51,8 +65,6 @@ export default function Statistics() {
     fetchTransfers(year);
   }, []);
 
-  const tableRef = useRef(null);
-  const tableRef2 = useRef(null);
 
   const columns1 = React.useMemo(
     () => [
@@ -74,6 +86,7 @@ export default function Statistics() {
     [months]
   );
 
+
   if (loading) {
     return <div>Loading...</div>;
   } else {
@@ -86,78 +99,55 @@ export default function Statistics() {
 
         <main>
           <Navbar />
-          <h1 className="title">Statistike po mjesecima</h1>
+          <h1 className="title">Transferi i putnici</h1>
           <div className="tables">
-            <h3>Transferi po destinaciji</h3>
-            <TableComponent
-              key={transfersArr.length}
-              refValue={tableRef}
-              columns={columns1}
-              data={transfersArr}
-            ></TableComponent>
-            <button
-              className="myButton"
-              onClick={() => {
-                if (document.getElementById("download-report1")) {
-                  document.getElementById("download-report1").click();
-                }
-              }}
-            >
-              Download
-            </button>
-            <DownloadTableExcel
-              key={transfersArr.length > 0 ? "data" : "empty"}
-              filename="report-transferi"
-              sheet="trnasfers"
-              currentTableRef={tableRef.current}
-            >
-              <button
-                key={transfersArr.length > 0 ? "data" : "empty"}
-                style={{ display: "none" }}
-                id="download-report1"
-                className="myButton"
-              >
-                {" "}
-                Export excel{" "}
-              </button>
-            </DownloadTableExcel>
-            <h3>Putnici po destinaciji</h3>
-            <TableComponent
-              key={passengersArr.length}
-              refValue={tableRef2}
-              id="table2"
-              columns={columns1}
-              data={passengersArr}
-            ></TableComponent>
-            <button
-              className="myButton"
-              onClick={() => {
-                if (document.getElementById("download-report2")) {
-                  document.getElementById("download-report2").click();
-                }
-              }}
-            >
-              Download
-            </button>
-            <DownloadTableExcel
-              key={passengersArr.length > 0 ? "data" : "empty"}
-              filename="report-putnici"
-              sheet="passengers"
-              currentTableRef={tableRef2.current}
-            >
-              <button
-                key={passengersArr.length > 0 ? "data" : "empty"}
-                style={{ display: "none" }}
-                id="download-report2"
-                className="myButton"
-              >
-                {" "}
-                Export excel{" "}
-              </button>
-            </DownloadTableExcel>
+            <h2>Po Aerodromu: </h2>
+            <div className="period-filter">
+              <div className='filter'>
+                <label htmlFor="year">Godina: </label>
+                <input type="number" id="year" onChange={(e) => setYearPort(e.target.value)} />
+              </div>
+              <div className='filter'>
+                <label htmlFor="month">Mjesec: </label>
+                <input type="number" id="month" onChange={(e) => setMonthPort(e.target.value)} />
+              </div>
+            </div>
+            <div className="red">
+              <div className="tabela">
+                <h3>Transferi</h3>
+                <TableComponent
+                  id='transfers-dest'
+                  columns={columns1}
+                  data={displayTransfers}
+                />
+                <button
+                  className="myButton"
+                  onClick={() => {
+                    exportTableToExcel("transfers-dest");
+                  }}
+                >
+                  Export to excel
+                </button>
+              </div>
+              <div className="tabela">
+                <h3>Putnici: </h3>
+                <TableComponent
+                  id='passengers-dest'
+                  columns={columns1}
+                  data={displayPassengers}
+                />
+                <button
+                  className="myButton"
+                  onClick={() => {
+                    exportTableToExcel("passengers-dest");
+                  }}
+                >
+                  Export to excel
+                </button>
+              </div>
+            </div>
           </div>
         </main>
-
         <footer>
           <div className="footer-div">
             <p>Powered by</p>
@@ -167,37 +157,21 @@ export default function Statistics() {
 
         <style jsx>
           {`
-            .demTable {
-              display: block;
-              width: 100%;
-              overflow-y: hidden;
-              border: 1px outset #b3adad;
-              border-collapse: separate;
-              border-spacing: 2px;
-              padding: 3px;
-              border-radius: 5px;
+            .period-filter {
+              display: flex;
+              flex-direction: row;
+              justify-content: center;
+              align-items: center;
               margin-bottom: 20px;
-              box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em,
-                rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em,
-                rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
             }
-            .demTable th {
-              border: 1px outset #b3adad;
-              padding: 5px;
-              font-size: calc(0.5vw + 0.5vh + 0.6vmin);
-              background: #3a94d9;
-              color: #ffffff;
-              border-radius: 5px;
+            .filter {
+              display: inline-block;
+              margin: 0 10px;
             }
-            .demTable td {
-              border: 1px outset #b3adad;
-              text-align: left;
-              padding: 5px;
-              font-size: calc(0.4vw + 0.5vh + 0.5vmin);
-              font-weight: 550;
-              background: #ffffff;
-              border-radius: 5px;
-              color: #313030;
+            .tabela{
+              display: inline-block;
+              margin: 0 20px;
+            
             }
             .container {
               min-height: 100vh;
@@ -218,7 +192,14 @@ export default function Statistics() {
               padding-bottom: 20px;
               height: min-content;
             }
+            .red{
+              display: flex;
+              flex-direction: row;
+              justify-content: space-evenly;
+              align-items: center;
+              width: 100%;
 
+            }
             footer {
               width: 100%;
               height: 80px;
@@ -248,7 +229,7 @@ export default function Statistics() {
             }
           `}
         </style>
-      </div>
+      </div >
     );
   }
 }

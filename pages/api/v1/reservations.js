@@ -12,11 +12,11 @@ export default async (req, res) => {
     res.status(400).json({ message: "Please select a valid month" });
     return;
   }
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0);
+  const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 59, 999);
 
   const reservations = await Reservation.find({
-    arrivalDate: { $gte: startDate, $lte: endDate },
+    arrivalDate: { $gt: startDate, $lte: endDate },
     status: { $ne: "CANCELLED" },
     "pricing.calculated": true,
   })

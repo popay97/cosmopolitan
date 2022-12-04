@@ -3,8 +3,8 @@ import React from 'react'
 function Navbar() {
   return (
     <div className="navbar">
-        <h1>Cosmopolitan Management Panel</h1>
-        <style jsx>{`
+      <h1>Cosmopolitan Management Panel</h1>
+      <style jsx>{`
 
             .navbar {
                 display: flex;
@@ -18,7 +18,7 @@ function Navbar() {
                 border-bottom: 1px solid #eaeaea;
             }
         `}</style>
-    </div> 
+    </div>
 
   )
 }

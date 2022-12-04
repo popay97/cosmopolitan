@@ -238,9 +238,6 @@ export default async (req, res) => {
         parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
     }
 
-    //update reservation
-    console.log(reservations[i].arrivalDate);
-    console.log(reservations[i].depDate);
     let arrD = new Date(reservations[i].arrivalDate);
     let depD = new Date(reservations[i].depDate);
     const ways =

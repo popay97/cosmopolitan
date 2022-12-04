@@ -11,7 +11,7 @@ function ManageUsers() {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     console.log(user);
-    if (!token) {
+    if (!token || !user.isAdmin) {
       window.location.href = "/";
     }
   }, []);
