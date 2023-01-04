@@ -38,9 +38,7 @@ export default function TableComponent({ columns, data, id, refValue }) {
       <style jsx>
         {`
           .demTable {
-            display: block;
-            width: 100%;
-            overflow-y: hidden;
+            display: inline-block;
             border: 1px outset #b3adad;
             border-collapse: separate;
             border-spacing: 2px;

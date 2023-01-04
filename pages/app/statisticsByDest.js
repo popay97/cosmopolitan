@@ -56,8 +56,21 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
   const [day, setDay] = React.useState(0);
   const [data, setData] = React.useState([]);
   const [view, setView] = React.useState("hotel");
-
-
+  const [yearOnly, setYearOnly] = React.useState(false);
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const columns = React.useMemo(
     () => {
       if (view === "hotel") {
@@ -96,7 +109,8 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
     [view]
   );
   const displayData = React.useMemo(() => {
-    if (data.length > 0) {
+    if (data.length > 0 && !yearOnly) {
+      console.log('nije samo godina')
       if (view === "hotel") {
         let total = data.length;
         for (let i = 0; i < data.length; i++) {
@@ -147,10 +161,68 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
         return billingDestinationData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
       }
     }
+    else if (data.length > 0 && yearOnly) {
+      //same as above but each element of data is an array with a monthly data, let each element of data be a month and data formatting be the same as above
+      setYearOnly(true);
+      let resortData = [];
+      let billingDestinationData = [];
+      for (let i = 0; i < data.length; i++) {
+        let monthData = data[i];
+        let total = monthData.length;
+        for (let j = 0; j < monthData.length; j++) {
+          let resort = monthData[j].resort;
+          let billingDestination = monthData[j].billingDestination;
+          if (resorts.indexOf(resort) === -1) {
+            resorts.push(resort);
+          }
+          if (billingDestinations.indexOf(billingDestination) === -1) {
+            billingDestinations.push(billingDestination);
+          }
+        }
+        let monthlyResortData = [];
+        for (let j = 0; j < resorts.length; j++) {
+          let resort = resorts[j];
+          let numOfTransfers = 0;
+          for (let k = 0; k < monthData.length; k++) {
+            if (monthData[k].resort === resort) {
+              numOfTransfers++;
+            }
+          }
+          let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          if (percentage > 0) {
+            monthlyResortData.push({ resort, numOfTransfers, percentage })
+          }
+        }
+        resortData.push(monthlyResortData.sort((a, b) => b.numOfTransfers - a.numOfTransfers));
+        let monthlyBillingDestinationData = [];
+        for (let j = 0; j < billingDestinations.length; j++) {
+          let billingDestination = billingDestinations[j];
+          let numOfTransfers = 0;
+          for (let k = 0; k < monthData.length; k++) {
+            if (monthData[k].billingDestination === billingDestination) {
+              numOfTransfers++;
+            }
+          }
+          let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          if (parseFloat(percentage) > 0) {
+            monthlyBillingDestinationData.push({ billingDestination, numOfTransfers, percentage })
+          }
+        }
+        billingDestinationData.push(monthlyBillingDestinationData.sort((a, b) => b.numOfTransfers - a.numOfTransfers));
+      }
 
+      if (view === "hotel") {
+        console.log("a kao vraca tabelu za resort")
+        return resortData
+      }
+      else {
+        return billingDestinationData
+      }
+
+    }
     return [];
 
-  }, [data, view]);
+  }, [data, view, yearOnly]);
 
   const handleAirportChange = (event) => {
     setAirport(event.target.value);
@@ -181,7 +253,14 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
     })
       .then((res) => res.json())
       .then((data) => {
-        setData(data);
+        if (data.yearOnly) {
+          setYearOnly(true);
+          setData(data.reservationsArray);
+        }
+        else {
+          setYearOnly(false);
+          setData(data.reservations);
+        }
       });
   };
 
@@ -243,25 +322,33 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
             Export excel
           </button>
         </div>
-        <div className={displayData.length > 0 ? "table" : "empty"}>
-          {displayData.length > 0 ? (
+        <div className='table'>
+          {displayData.length > 0 && !yearOnly && (
             <TableComponent
               id='airportStats'
               columns={columns}
               data={displayData}
             />
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
-              }}
-            >
-              <h3>No Data for your filter values</h3>
-            </div>
+          )}
+          {displayData.length > 0 && yearOnly && (
+            displayData.map((monthData, index) => {
+              if (monthData.length > 0) {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', margin: '10px', justifyContent: 'center', alignItems: 'center' }}>
+                    <h3>{months[index]}</h3>
+                    <TableComponent
+                      id='airportStats'
+                      columns={columns}
+                      data={monthData}
+                      key={index}
+                    />
+                  </div>
+                )
+              }
+            })
+          )}
+          {displayData.length === 0 && (
+            <h1>No data to display</h1>
           )}
         </div>
         <style jsx>{`
@@ -283,12 +370,12 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
             margin-top: 20px;
           }
           .table {
-            overflow-y: hidden;
+            overflow-x: ${yearOnly ? "scroll" : "hidden"};
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            width: min-content;
+            flex-direction: ${yearOnly ? "row" : "column"};
+            align-items: ${yearOnly ? "flex-start" : "center"};
+            justify-content: ${yearOnly ? "flex-start" : "center"};
+            width: 100vw;
           }
         `}</style>
       </div>

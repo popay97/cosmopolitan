@@ -27,19 +27,34 @@ export default async (req, res) => {
     queryStartDate = new Date(year, month, 1);
     queryEndDate = new Date(year, month, lastDayOfMonth, 23, 59);
   } else if (destionation && year) {
-    queryStartDate = new Date(year, 0, 1);
-    queryEndDate = new Date(year, 11, 31, 23, 59);
+    //if only the year is provided, then it should return data for each month separately
+    //write the code here and return the data
+    var reservationsArray = [];
+    for (var i = 0; i < 12; i++) {
+      var lastDayOfMonth = new Date(year, i + 1, 0).getDate();
+      queryStartDate = new Date(year, i, 1);
+      queryEndDate = new Date(year, i, lastDayOfMonth, 23, 59);
+      const reservations = await Reservation.find({
+        arrivalAirport: destionation,
+        billingDestination: { $ne: null },
+        arrivalDate: { $gte: queryStartDate, $lt: queryEndDate },
+      }).lean();
+      reservationsArray.push(reservations);
+    }
+    res.status(200).json({ reservationsArray, yearOnly: true });
+    return;
   } else if (destionation) {
     queryStartDate = new Date(2000, 0, 1);
     queryEndDate = new Date(2100, 11, 31);
   }
+
   try {
     const reservations = await Reservation.find({
       arrivalAirport: destionation,
       billingDestination: { $ne: null },
       arrivalDate: { $gte: queryStartDate, $lt: queryEndDate },
     }).lean();
-    res.status(200).json(reservations);
+    res.status(200).json({ reservations, yearOnly: false });
   } catch (error) {
     res.status(400).json({ success: false });
   }
