@@ -52,7 +52,7 @@ export default function Home() {
             }}
             style={{ cursor: "pointer" }}
           >
-            <h3>Registruj novog korisnika &rarr;</h3>
+            <h3>Upravljanje korisnicima &rarr;</h3>
           </div>
           <div
             className="card"

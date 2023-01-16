@@ -11,6 +11,7 @@ export default function Accounting() {
   const [month, setMonth] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [withHandlingFee, setWithHandlingFee] = useState(false);
 
 
   const displayData = React.useMemo(() => {
@@ -99,7 +100,7 @@ export default function Accounting() {
       },
       {
         Header: "Transfer Cost",
-        accessor: (row) => row.pricing.outgoingInvoice.cost,
+        accessor: (row) => row.pricing.outgoingInvoice.cost.toFixed(2),
       },
       {
         Header: "Handling Fee",
@@ -121,16 +122,17 @@ export default function Accounting() {
         Cell: ({ value }) => {
           let objYear = new Date(value.depDate).getFullYear();
           let objMonth = new Date(value.depDate).getMonth() + 1;
-          if (parseInt(objYear) === parseInt(year) && parseInt(objMonth) === parseInt(month)) {
-            return (
-              parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways + parseFloat(value.pricing.outgoingInvoice.handlingFee)).toFixed(2)
-            );
+          var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
+          if (handlingFee) {
+            return value.pricing.outgoingInvoice.totalWithFee.toFixed(2);
+          } else {
+            return value.pricing.outgoingInvoice.total.toFixed(2);
           }
-          return parseFloat(value.pricing.outgoingInvoice.cost * value.pricing.ways).toFixed(2);
-        },
+
+        }
       },
     ],
-    [month, year]
+    [month, year, withHandlingFee]
   );
 
   useEffect(() => {
@@ -141,27 +143,23 @@ export default function Accounting() {
       window.location.href = "/";
     }
   }, []);
-
-
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const res = await axios
-        .post("/api/v1/reservations", { year, month })
-        .then((res) => {
-          console.log(res.data);
-          setData(res.data);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+    if (year && month) {
       setLoading(false);
     }
+  }, [data]);
 
-    if (year && month) {
-      fetchData();
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/v1/reservations", { year, month })
+      if (res.status === 200) {
+        setData(res.data);
+      }
+    } catch (err) {
+      console.log(err);
     }
-  }, [year, month]);
+  }
 
 
   return (
@@ -189,6 +187,21 @@ export default function Accounting() {
               id="month"
               onChange={(e) => setMonth(e.target.value)}
             />
+          </div>
+          <div className="filter">
+            <label htmlFor="handlingFee">Handling Fee</label>
+            <input type='checkbox' id='handlingFee' name='handlingFee' value='handlingFee' onChange={(e) => setWithHandlingFee(e.target.checked)} />
+          </div>
+          <div className='filter'>
+            <button
+              className="myButton"
+              onClick={() => {
+                fetchData();
+              }}
+            >
+              Load
+            </button>
+
           </div>
           <div className='filter'>
             <button
@@ -225,9 +238,11 @@ export default function Accounting() {
           .tabelica{
             display: flex;
             f90vwlex-direction: column;
-            justify-content: center;
-            align-items: center;
-            
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 100vw;
+            max-height: 75vh;
+            overflow: scroll;
           }
           .filterRow {
             display: flex;

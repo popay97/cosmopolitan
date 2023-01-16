@@ -1,127 +1,141 @@
 import React from "react";
 import Head from "next/head";
 import axios from "axios";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import "bootstrap/dist/css/bootstrap.min.css";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 function ManageUsers() {
-  React.useEffect(() => {
-    const token = localStorage.getItem("cosmo_token");
-    const user = jwt.decode(token);
-    console.log(user);
-    if (!token || !user.isAdmin) {
-      window.location.href = "/";
-    }
-  }, []);
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [isAdmin, setIsAdmin] = React.useState(false);
-  const [isSubcontractor, setIsSubcontractor] = React.useState(false);
-  const [subcontractorCountry, setSubcontractorCountry] = React.useState("");
-  async function handleSubmit(event) {
-    event.preventDefault();
-    try {
-      const response = await axios.post("/api/v1/register", {
-        username: username,
-        password: password,
-        isAdmin: isAdmin,
-        isSubcontractor: isSubcontractor,
-        subcontractorCountry: subcontractorCountry,
-      });
-      console.log(response);
-      window.alert("User created successfully");
-    } catch (e) {
-      console.log(e);
-      window.alert("Something went wrong, please try again later");
-    }
-  }
-  return (
-    <div className="container">
-      <Head>
-        <title>Cosmoplitan conrol panel</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    React.useEffect(() => {
+        const token = localStorage.getItem("cosmo_token");
+        const user = jwt.decode(token);
+        if (!token || !user.isAdmin) {
+            window.location.href = "/";
+        }
+    }, []);
+    const [users, setUsers] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState(false);
+    const [search, setSearch] = React.useState("");
+    const keyIgnores = ["_id", "password", "__v", 'id'];
+    React.useEffect(() => {
+        const getUsers = async () => {
+            const body = {
+                method: "getall",
+                table: "users"
+            }
+            const res = await axios.post("/api/v1/commonservice", body);
+            if (res.status === 200) {
+                setUsers(res.data);
+                setLoading(false);
+            } else {
+                setError(true);
+                window.alert("Error occured");
+            }
 
-      <main>
-        <Navbar></Navbar>
-        <div className="regsiterForm">
-          <h3>Register new user</h3>
-          <Form>
-            <Form.Group className="mb-3" controlId="formBasicEmail">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                type="username"
-                placeholder="Username"
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                }}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicPassword">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                }}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicCheckbox">
-              <Form.Check
-                type="checkbox"
-                label="User is Admin?"
-                onChange={(e) => {
-                  setIsAdmin(e.target.checked);
-                  setIsSubcontractor(false);
-                  setSubcontractorCountry("");
-                }}
-                disabled={isSubcontractor}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formBasicCheckbox">
-              <Form.Check
-                type="checkbox"
-                label="User is subcontractor?"
-                disabled={isAdmin}
-                checked={isSubcontractor}
-                onChange={(e) => {
-                  setIsSubcontractor(e.target.checked);
-                  setIsAdmin(false);
-                }}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Subcontractor coutry:</Form.Label>
-              <Form.Select
-                type="select"
-                label="Subcontractor country:"
-                defaultValue=""
-                disabled={isAdmin}
-                onChange={(e) => {
-                  setSubcontractorCountry(e.target.value);
-                }}
-              >
-                <option value="ME">Montenegro</option>
-                <option value="HR">Croatia</option>
-              </Form.Select>
-            </Form.Group>
-            <Button variant="primary" type="submit" onClick={handleSubmit}>
-              Submit
-            </Button>
-          </Form>
-        </div>
-      </main>
+        }
+        getUsers();
+    }, []);
 
-      <footer>
-        <div className="footer-div">
-          <p>Powered by</p>
-          <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
-        </div>
-      </footer>
-      <style jsx>{`
+    const deleteUser = async (index) => {
+        const objectId = users[index]._id;
+        const body = {
+            method: "delete",
+            table: "users",
+            objectId: objectId
+        }
+        const res = await axios.post("/api/v1/commonservice", body);
+        if (res.status === 200) {
+            window.alert("User deleted");
+            window.location.reload();
+        } else {
+            window.alert("Error occured");
+        }
+    }
+
+    return (
+        <div className="container" >
+            <Head>
+                <title>Cosmoplitan conrol panel</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+
+            <main>
+                <Navbar></Navbar>
+                <div className="list">
+                    <h3>Lista korisnika</h3>
+                    <div className="table-filters">
+                        <div className="filter">
+                            <label htmlFor="filter">Search</label>
+                            <input type="text" id="search" onChange={(e) => { setSearch(e.target.value) }} />
+                        </div>
+                        <div className="filter">
+                            <button
+                                className="myButton" onClick={() => { window.location.href = "/app/addUser" }} >Add new user
+                            </button>
+                        </div>
+                    </div>
+                    <div className="table">
+                        {!loading && (<table>
+                            <thead className="header">
+                                <tr>
+                                    {Object.keys(users[0]).map((key, index) => {
+                                        if (!keyIgnores.includes(key)) {
+                                            //check if key contains a capital letter
+                                            if (key.match(/[A-Z]/)) {
+                                                //split when capital letter is found and capitalize the first letter of both words
+                                                const splitKey = key.split(/(?=[A-Z])/).map((word) => {
+                                                    return word.charAt(0).toUpperCase() + word.slice(1);
+                                                }).join(" ");
+                                                return <th key={index} className='field'>{splitKey}</th>
+                                            }
+                                        }
+                                    })}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {search === "" ? users.map((user, index) => {
+                                    return (
+                                        <tr key={index} className='row'>
+                                            {Object.keys(user).map((key1, index1) => {
+                                                if (!keyIgnores.includes(key1)) {
+                                                    return <td key={index1} className='field'>{user[key1].toString()}</td>
+                                                }
+                                            })}
+                                            <td key={index} className='field'>
+                                                <button className="myButton" onClick={() => { deleteUser(index) }}><DeleteSweepIcon /></button>
+                                            </td>
+                                        </tr>
+                                    )
+                                }) : users.filter((user) => {
+                                    return Object.keys(user).some((key) => {
+                                        if (!keyIgnores.includes(key)) {
+                                            return user[key].toString().toLowerCase().includes(search.toLowerCase())
+                                        }
+                                    })
+                                }).map((user, index) => {
+                                    return (
+                                        <tr key={index} className='row'>
+                                            {Object.keys(user).map((key, index) => {
+                                                if (!keyIgnores.includes(key)) {
+                                                    return <td className="field" key={index}>{user[key]}</td>
+                                                }
+                                            })}
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>)}
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <div className="footer-div">
+                    <p>Powered by</p>
+                    <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
+                </div>
+            </footer>
+            <style jsx>{`
         .container {
           display: flex;
           flex-direction: column;
@@ -134,16 +148,48 @@ function ManageUsers() {
           flex-direction: column;
           justify-content: flex-start;
           width: 100%;
+          min-height: 100vh;
           align-items: center;
           text-align: center;
         }
-        .regsiterForm {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          height: 80vh;
-          width: 100%;
+        .header {
+            //backgoround color light grey
+            background-color: #337fed;
+            color: white;
+            border-bottom: 1px solid #ddd;
+        }
+        .row {
+            border-bottom: 1px solid #ddd;
+        }
+        .row:hover {
+            background-color: #ddd;
+        }
+        .field {
+            padding: 15px;
+        }
+        .table-filters {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            width: 80%;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .list{
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            width: 80%;
+            align-items: center;    
+        }
+        .filter{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            max-width: 170px;
+            align-items: center;
+            text-align: center;
         }
         footer {
           width: 100%;
@@ -165,8 +211,8 @@ function ManageUsers() {
           margin-left: 20px;
         }
       `}</style>
-    </div>
-  );
+        </div >
+    );
 }
 
 export default ManageUsers;

@@ -53,12 +53,16 @@ const ReservationSchema = new Schema(
         default: false,
       },
       incomingInvoice: {
-        total: Number,
+        total: {
+          type: Number,
+          default: 0,
+        }
       },
       outgoingInvoice: {
         cost: Number,
         handlingFee: Number,
         total: Number,
+        totalWithFee: Number,
       },
     },
   },

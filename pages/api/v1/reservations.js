@@ -22,6 +22,19 @@ export default async (req, res) => {
   })
     .sort({ arrivalDate: 1 })
     .lean();
+  //include reservations that have arrived one month prior to the selected month but will leave in the selected month
+  const reservations2 = await Reservation.find({
+    arrivalDate: { $lte: startDate },
+    depDate: { $gt: startDate, $lte: endDate },
+    status: { $ne: "CANCELLED" },
+    "pricing.calculated": true,
+  })
+    .sort({ arrivalDate: 1 })
+    .lean();
+  reservations.push(...reservations2)
+  reservations.sort((a, b) => {
+    return new Date(a.arrivalDate) - new Date(b.arrivalDate);
+  });
 
   return res.status(200).json(reservations);
 };

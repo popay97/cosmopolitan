@@ -1,5 +1,6 @@
 import Reservation from "../../../models/ReservationModel.js";
 import mongoose from "mongoose";
+import dbConnect from "../../../lib/dbConnect.js";
 export default async (req, res) => {
   function csvToObject(csv) {
     // Split the CSV string into an array of rows.
@@ -36,7 +37,8 @@ export default async (req, res) => {
     // Return the data object.
     return data;
   }
-
+  //connect to database
+  await dbConnect();
   //update all documents in the database pricing.calculated to false
   await Reservation.updateMany(
     { "pricing.calculated": true },
@@ -94,8 +96,10 @@ export default async (req, res) => {
     const isOldPricing =
       bookingDate.getTime() < new Date("2021-09-15").getTime();
     const numOfPassangers = reservations[i].adults + reservations[i].children;
+    const adults = reservations[i].adults;
+    const children = reservations[i].children;
     const location = locations.find(
-      (location) => location.accomCd === reservations[i].accomCd
+      (location) => location.accomCd.toString().trim().toUpperCase() === reservations[i].accomCd.toString().trim().toUpperCase()
     );
     if (!location) {
       errors.push(`Location not found for accomCD ${reservations[i].accomCd}`,
@@ -112,6 +116,28 @@ export default async (req, res) => {
 
     //depending on isOldPricing use old or new prices
     reservations[i].billingDestination = resort;
+    reservations[i].pricing = {
+      ways: 0,
+      calculated: false,
+      incomingInvoice: {
+        total: 0,
+      },
+      outgoingInvoice: {
+        cost: 0,
+        total: 0,
+        handlingFee: 0,
+        totalWithFee: 0,
+      }
+    };
+    let arrD = new Date(reservations[i].arrivalDate);
+    let depD = new Date(reservations[i].depDate);
+    const ways =
+      arrD.getFullYear() === depD.getFullYear() &&
+        arrD.getMonth() === depD.getMonth()
+        ? 2
+        : 1;
+
+    reservations[i].pricing.ways = ways;
     if (isOldPricing) {
       const pricesOI = incomingOld.find(
         (price) =>
@@ -120,12 +146,12 @@ export default async (req, res) => {
           price.Destination.toUpperCase() === resort.toUpperCase()
       );
       if (pricesOI !== null && pricesOI !== undefined) {
-        if (reservations[i].transfer === "STR") {
-          reservations[i].pricing.incomingInvoice.total = pricesOI["Shared"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
-          reservations[i].pricing.incomingInvoice.total = pricesOI["Private<3"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
-          reservations[i].pricing.incomingInvoice.total = pricesOI["Private>3"];
+        if (reservations[i].transfer === "STR" && pricesOI["Shared"] !== "" && pricesOI["Shared"] !== undefined && pricesOI["Shared"] !== null) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(pricesOI["Shared"].trim()) * adults + parseFloat(pricesOI["Shared"].trim()) * children * 0.5;
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3 && pricesOI["Private<3"] !== "" && pricesOI["Private<3"] !== undefined && pricesOI["Private<3"] !== null) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(pricesOI["Private<3"].trim());
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3 && pricesOI["Private>3"] !== "" && pricesOI["Private>3"] !== undefined && pricesOI["Private>3"] !== null) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(pricesOI["Private>3"].trim());
         } else {
           errors.push(
             `Transfer PRICE oi not found for reservation: ${reservations[i]._id}`
@@ -133,27 +159,27 @@ export default async (req, res) => {
           continue;
         }
       } else {
-        console.log("prices is empty");
+        console.log("prices is empty old incoming");
         console.log("skiping reservation");
         //skip this reservation
         continue;
       }
       const pricesOutgoing = outgoingOld.find(
         (price) =>
-          price.Airport.toUpperCase() ===
-          reservations[i].arrivalAirport.toUpperCase() &&
-          price.Destination.toUpperCase() === resort.toUpperCase()
+          price.Airport.toUpperCase().trim() ===
+          reservations[i].arrivalAirport.toUpperCase().trim() &&
+          price.Destination.toUpperCase().trim() === resort.toUpperCase().trim()
       );
       if (pricesOutgoing !== null && pricesOutgoing !== undefined) {
-        if (reservations[i].transfer === "STR") {
+        if (reservations[i].transfer === "STR" && pricesOutgoing["Shared"] !== null && pricesOutgoing["Shared"] !== undefined) {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Shared"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
+            parseFloat(pricesOutgoing["Shared"].trim()) * adults + parseFloat(pricesOutgoing["Shared"].trim()) * children * 0.5;
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3 && pricesOutgoing["Private<3"] !== null && pricesOutgoing["Private<3"] !== undefined) {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Private<3"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
+            parseFloat(pricesOutgoing["Private<3"].trim());
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3 && pricesOutgoing["Private>3"] !== null && pricesOutgoing["Private>3"] !== undefined) {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Private>3"];
+            parseFloat(pricesOutgoing["Private>3"].trim());
         } else {
           errors.push(
             `Transfer PRICE OO not found for reservation: ${reservations[i]._id}`
@@ -171,22 +197,23 @@ export default async (req, res) => {
         parseInt(reservations[i].children) * handlingFeeChild;
 
       reservations[i].pricing.outgoingInvoice.total =
-        parseFloat(reservations[i].pricing.outgoingInvoice.cost) +
-        parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
+        reservations[i].pricing.outgoingInvoice.cost * ways;
+
+      reservations[i].pricing.outgoingInvoice.totalWithFee = reservations[i].pricing.outgoingInvoice.total + reservations[i].pricing.outgoingInvoice.handlingFee;
     } else {
       const prices = incomingNew.find(
         (price) =>
-          price.Airport.toUpperCase() ===
-          reservations[i].arrivalAirport.toUpperCase() &&
-          price.Destination.toUpperCase() === resort.toUpperCase()
+          price.Airport.toUpperCase().trim() ===
+          reservations[i].arrivalAirport.toUpperCase().trim() &&
+          price.Destination.toUpperCase().trim() === resort.toUpperCase().trim()
       );
-      if (prices != null && prices != undefined) {
-        if (reservations[i].transfer === "STR") {
-          reservations[i].pricing.incomingInvoice.total = prices["Shared"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
-          reservations[i].pricing.incomingInvoice.total = prices["Private<3"];
-        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
-          reservations[i].pricing.incomingInvoice.total = prices["Private>3"];
+      if (prices !== null && prices !== undefined) {
+        if (reservations[i].transfer === "STR" && prices["Shared"] !== null && prices["Shared"] !== undefined) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(prices["Shared"].trim());
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3 && prices["Private<3"] !== null && prices["Private<3"] !== undefined) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(prices["Private<3"].trim());
+        } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3 && prices["Private>3"] !== null && prices["Private>3"] !== undefined) {
+          reservations[i].pricing.incomingInvoice.total = parseFloat(prices["Private>3"].trim());
         } else {
           errors.push(
             `Transfer PRICE NI not found for reservation: ${reservations[i].accomCd}`
@@ -203,20 +230,20 @@ export default async (req, res) => {
 
       const pricesOutgoing = outgoingNew.find(
         (price) =>
-          price.Airport.toUpperCase() ===
-          reservations[i].arrivalAirport.toUpperCase() &&
-          price.Destination.toUpperCase() === resort.toUpperCase()
+          price.Airport.toUpperCase().trim() ===
+          reservations[i].arrivalAirport.toUpperCase().trim() &&
+          price.Destination.toUpperCase().trim() === resort.toUpperCase().trim()
       );
       if (pricesOutgoing !== null && pricesOutgoing !== undefined) {
         if (reservations[i].transfer === "STR") {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Shared"];
+            parseFloat(pricesOutgoing["Shared"].trim()) * adults + parseFloat(pricesOutgoing["Shared"].trim()) * children * 0.5;
         } else if (reservations[i].transfer === "PTR" && numOfPassangers <= 3) {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Private<3"];
+            parseFloat(pricesOutgoing["Private<3"].trim());
         } else if (reservations[i].transfer === "PTR" && numOfPassangers > 3) {
           reservations[i].pricing.outgoingInvoice.cost =
-            pricesOutgoing["Private>3"];
+            parseFloat(pricesOutgoing["Private>3"].trim())
         } else {
           errors.push(
             `Transfer PRICE NO not found for reservation: ${reservations[i].accomCd}`
@@ -234,19 +261,13 @@ export default async (req, res) => {
         parseInt(reservations[i].children) * handlingFeeChild;
 
       reservations[i].pricing.outgoingInvoice.total =
-        parseFloat(reservations[i].pricing.outgoingInvoice.cost) +
-        parseFloat(reservations[i].pricing.outgoingInvoice.handlingFee);
+        reservations[i].pricing.outgoingInvoice.cost * ways;
+
+      reservations[i].pricing.outgoingInvoice.totalWithFee =
+        reservations[i].pricing.outgoingInvoice.total +
+        reservations[i].pricing.outgoingInvoice.handlingFee;
+
     }
-
-    let arrD = new Date(reservations[i].arrivalDate);
-    let depD = new Date(reservations[i].depDate);
-    const ways =
-      arrD.getFullYear() === depD.getFullYear() &&
-        arrD.getMonth() === depD.getMonth()
-        ? 2
-        : 1;
-
-    reservations[i].pricing.ways = ways;
     reservations[i].pricing.calculated = true;
     try {
       await Reservation.findByIdAndUpdate(reservations[i]._id, reservations[i]);
@@ -255,7 +276,7 @@ export default async (req, res) => {
       errors.push(err);
     }
   }
-
+  console.log(errors);
   return res.status(200).json({
     errorArray: errors,
     errors: errors.length > 0 ? errors.length : null,
