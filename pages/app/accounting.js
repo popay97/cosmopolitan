@@ -12,6 +12,7 @@ export default function Accounting() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [withHandlingFee, setWithHandlingFee] = useState(false);
+  const [country, setCountry] = useState(null);
 
 
   const displayData = React.useMemo(() => {
@@ -132,7 +133,7 @@ export default function Accounting() {
         }
       },
     ],
-    [month, year, withHandlingFee]
+    [month, year, withHandlingFee, country]
   );
 
   useEffect(() => {
@@ -144,15 +145,15 @@ export default function Accounting() {
     }
   }, []);
   useEffect(() => {
-    if (year && month) {
+    if (year && month && country) {
       setLoading(false);
     }
   }, [data]);
 
-  async function fetchData() {
+  async function fetchData(year, month, country) {
     setLoading(true);
     try {
-      const res = await axios.post("/api/v1/reservations", { year, month })
+      const res = await axios.post("/api/v1/reservations", { year, month, country })
       if (res.status === 200) {
         setData(res.data);
       }
@@ -189,6 +190,17 @@ export default function Accounting() {
             />
           </div>
           <div className="filter">
+            <label htmlFor="month">Month</label>
+            <select
+              name='country'
+              onChange={(e) => setCountry(e.target.value)}
+            >
+              <option value=''>Select Country</option>
+              <option value='CRO'>Croatia</option>
+              <option value='ME'>Montenegro</option>
+            </select>
+          </div>
+          <div className="filter">
             <label htmlFor="handlingFee">Handling Fee</label>
             <input type='checkbox' id='handlingFee' name='handlingFee' value='handlingFee' onChange={(e) => setWithHandlingFee(e.target.checked)} />
           </div>
@@ -196,7 +208,7 @@ export default function Accounting() {
             <button
               className="myButton"
               onClick={() => {
-                fetchData();
+                fetchData(year, month, country);
               }}
             >
               Load

@@ -49,9 +49,9 @@ export default async function handler(req, res) {
   let AllMonths = AllData.filter((r) => {
     let arrdate = new Date(r.arrivalDate);
     if (
-      months.indexOf(`${arrdate.getMonth()}-${arrdate.getFullYear()}`) === -1
+      months.indexOf(`${arrdate.getMonth() + 1}-${arrdate.getFullYear()}`) === -1
     ) {
-      months.push(`${arrdate.getMonth()}-${arrdate.getFullYear()}`);
+      months.push(`${arrdate.getMonth() + 1}-${arrdate.getFullYear()}`);
     }
     return true;
   });
@@ -96,10 +96,10 @@ export default async function handler(req, res) {
   for (let i = 0; i < AllData.length; i++) {
     let arrdate = new Date(AllData[i].arrivalDate);
     brojTransfera[AllData[i].arrivalAirport][
-      `${arrdate.getMonth()}-${arrdate.getFullYear()}`
+      `${arrdate.getMonth() + 1}-${arrdate.getFullYear()}`
     ]++;
     brojPutnika[AllData[i].arrivalAirport][
-      `${arrdate.getMonth()}-${arrdate.getFullYear()}`
+      `${arrdate.getMonth() + 1}-${arrdate.getFullYear()}`
     ] += AllData[i].adults + AllData[i].children + AllData[i].infants;
   }
   let resortPercentageofTransfersbyAirport = [];
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       if (AllData[j].arrivalAirport == airports[i]) {
         if (
           resortPercentageofTransfersbyAirport[airports[i]][
-            AllData[j].resort
+          AllData[j].resort
           ] == undefined
         ) {
           resortPercentageofTransfersbyAirport[airports[i]][AllData[j].resort] =

@@ -14,8 +14,6 @@ export default function Statistics() {
   const [loading, setLoading] = React.useState(true);
   const [yearPort, setYearPort] = React.useState(0);
   const [monthPort, setMonthPort] = React.useState(0);
-  const [yearDest, setYearDest] = React.useState(0);
-  const [monthDest, setMonthDest] = React.useState(0);
 
   const fetchTransfers = async (year, month) => {
     let reqobj;
@@ -40,6 +38,15 @@ export default function Statistics() {
       for (let i = 0; i < res.data.airports.length; i++) {
         tmp2.push(res.data.brojPutnika[res.data.airports[i]]);
       }
+      console.log(tmp1);
+      console.log(tmp2);
+      tmp1 = tmp1.filter((el) => {
+        return el != undefined;
+      });
+      tmp2 = tmp2.filter((el) => {
+        return el != undefined;
+      });
+
       setTransfersArr(tmp1);
       setPassengersArr(tmp2);
       setLoading(false);
@@ -61,9 +68,15 @@ export default function Statistics() {
     if (!token || !user.isAdmin) {
       window.location.href = "/";
     }
-    const year = new Date().getFullYear();
-    fetchTransfers(year);
-  }, []);
+    const year = yearPort > 2000 ? yearPort : undefined;
+    const month = monthPort >= 1 && monthPort <= 12 ? monthPort : undefined;
+    if (!year && !month) {
+      fetchTransfers(new Date().getFullYear());
+    }
+    else {
+      fetchTransfers(year, month);
+    }
+  }, [yearPort, monthPort]);
 
 
   const columns1 = React.useMemo(
