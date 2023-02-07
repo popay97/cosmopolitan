@@ -49,8 +49,7 @@ export default async function handler(req, res) {
             total: costs,
             isWatermark: false,
         };
-        const dirRelativeToPublicFolder = "templates";
-        const dir = path.resolve("./public", dirRelativeToPublicFolder);
+        const dir = path.join(process.cwd(), "public", "templates");
         const templateHtml = fs.readFileSync(
             path.resolve(dir, "invoice.html"),
             "utf8"
