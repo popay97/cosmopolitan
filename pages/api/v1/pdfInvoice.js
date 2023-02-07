@@ -49,9 +49,8 @@ export default async function handler(req, res) {
             total: costs,
             isWatermark: false,
         };
-        const dir = path.join(process.cwd(), "public", "templates");
         const templateHtml = fs.readFileSync(
-            path.resolve(dir, "invoice.html"),
+            path.join(process.cwd(), "public", "templates", "invoice.html"),
             "utf8"
         );
         const filename = `invoice-${monthDict[month - 1]}-${year}.pdf`
