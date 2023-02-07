@@ -14,10 +14,68 @@ export default function Accounting() {
   const [withHandlingFee, setWithHandlingFee] = useState(false);
   const [country, setCountry] = useState(null);
 
+  const monthDict = {
+    0: "January",
+    1: "February",
+    2: "March",
+    3: "April",
+    4: "May",
+    5: "June",
+    6: "July",
+    7: "August",
+    8: "September",
+    9: "October",
+    10: "November",
+    11: "December",
+  };
 
   const displayData = React.useMemo(() => {
     return data;
   }, [data]);
+
+  const handleInvoice = async () => {
+    //get the sum of total cost column of the current table
+    let totalCost = 0;
+    for (let i = 0; i < data.length; i++) {
+      let value = data[i];
+      let objYear = new Date(value.depDate).getFullYear();
+      let objMonth = new Date(value.depDate).getMonth() + 1;
+      var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
+      if (handlingFee) {
+        totalCost += parseFloat(value.pricing.outgoingInvoice.totalWithFee);
+      } else {
+        totalCost += parseFloat(value.pricing.outgoingInvoice.total);
+      }
+    }
+
+    const body = {
+      "year": year,
+      "month": month,
+      "totalCost": totalCost,
+      "country": country
+    }
+    const result = axios({
+      method: "post",
+      url: "/api/v1/pdfInvoice",
+      data: body,
+      responseType: "blob",
+    }).then((response) => {
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+
+      link.download = `invoice-${monthDict[month - 1]}-${year}.pdf`;
+
+      link.href = url;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+
+    })
+
+  }
+
 
 
   const columns = useMemo(
@@ -226,6 +284,15 @@ export default function Accounting() {
             </button>
 
           </div>
+          <div className='filter'>
+            <button
+              className="myButton"
+              onClick={handleInvoice}
+            >
+              PDF Invoice
+            </button>
+
+          </div>
         </div>
         {loading && data.length == 0 ? (
           <div className="loading">Please select year and month</div>
@@ -241,43 +308,43 @@ export default function Accounting() {
 
         <style jsx>{`
           #main{
-            display:flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100vw;
-          }
+      display: flex;
+      flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+  }
           .tabelica{
-            display: flex;
-            f90vwlex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            width: 100vw;
-            max-height: 75vh;
-            overflow: scroll;
-          }
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100vw;
+    max-height: 75vh;
+    overflow: scroll;
+  }
           .filterRow {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-          }
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
           .filter {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly;
-            align-items: center;
-            margin: 20px;
-          }
-          .loading {
-            font-size: 20px;
-            font-weight: 600;
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-          }
-        `}</style>
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 20px;
+  }
+    .loading {
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  `}</style>
       </main>
     </>
   );
