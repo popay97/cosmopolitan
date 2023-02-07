@@ -4,10 +4,12 @@ const puppeteer = require("puppeteer");
 const handlebars = require("handlebars");
 
 async function html_to_pdf(templateHtml, dataBinding, options) {
+    let { executablePath } = require('puppeteer');
     const template = handlebars.compile(templateHtml);
     const finalHtml = encodeURIComponent(template(dataBinding));
 
     const browser = await puppeteer.launch({
+        executablePath: executablePath(),
         args: ["--no-sandbox"],
         headless: true,
     });
