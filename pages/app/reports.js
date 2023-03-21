@@ -6,7 +6,6 @@ import jwt from "jsonwebtoken";
 import axios from "axios";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import {
-  dateBetweenFilterFn,
   dateBetweenArrFn,
   dateBetweenDepFn,
   countryFilterFn,
@@ -19,7 +18,9 @@ import {
   useAsyncDebounce,
 } from "react-table";
 import { TfiReload } from "react-icons/tfi";
-
+import DateRangePicker from '@wojtekmaj/react-daterange-picker/dist/entry.nostyle';
+import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css'
+import 'react-calendar/dist/Calendar.css';
 
 export async function getServerSideProps(context) {
   const getData = await Reservation.find({
@@ -48,19 +49,35 @@ export async function getServerSideProps(context) {
 
 function NDayReport({ AllData, airports }) {
 
-
+  const [airport, setAirports] = React.useState(airports);
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
-    const user = jwt.decode(token);
+    const userr = jwt.decode(token);
     if (!token) {
       window.location.href = "/";
     }
+    if (!userr.isAdmin) {
+      //lock the country filter to subcontractrorCountry
+      console.log(userr?.subcontractorCountry)
+      setCountry(userr?.subcontractorCountry);
+      if (userr.subcontractorCountry == 'HR') {
+        let tmp = airports.filter((a) => { return a !== 'TIV' })
+        setAirports(tmp);
+      }
+      else {
+        let tmp1 = airports.filter((a) => { return a === 'TIV' })
+        setAirports(tmp1);
+      }
+      setUser(userr);
+    }
+    else {
+      setUser(userr);
+    }
   }, []);
 
-
-  const [dateBetween, setDateBetween] = React.useState([]);
-  const [dateBetweenArr, setDateBetweenArr] = React.useState([]);
-  const [dateBetweenDep, setDateBetweenDep] = React.useState([]);
+  const [user, setUser] = React.useState();
+  const [dateBetweenArr, setDateBetweenArr] = React.useState();
+  const [dateBetweenDep, setDateBetweenDep] = React.useState();
   const [allData, setAllData] = React.useState(AllData);
   const [pageLength, setPageLength] = React.useState(8);
   const [country, setCountry] = React.useState("all");
@@ -70,7 +87,6 @@ function NDayReport({ AllData, airports }) {
     () => ({
       dateBetweenDep: dateBetweenDepFn,
       dateBetweenArr: dateBetweenArrFn,
-      dateBetweenFn: dateBetweenFilterFn,
       text: (rows, id, filterValue) => {
         return rows.filter((row) => {
           const rowValue = row.values[id];
@@ -94,6 +110,11 @@ function NDayReport({ AllData, airports }) {
       {
         Header: "Reservation ID",
         accessor: "resId",
+        canFilter: false,
+      },
+      {
+        Header: "Status",
+        accessor: "status",
         canFilter: false,
       },
       {
@@ -126,8 +147,6 @@ function NDayReport({ AllData, airports }) {
           const date = value != undefined ? value.split("T")[0] : undefined;
           return date;
         },
-        filter: dateBetweenFilterFn,
-        canFilter: true,
       },
       {
         Header: "Arrival Airport",
@@ -268,10 +287,6 @@ function NDayReport({ AllData, airports }) {
   };
 
   React.useEffect(() => {
-    setFilter("booked", dateBetween);
-  }, [dateBetween]);
-
-  React.useEffect(() => {
     setFilter("arrivalDate", dateBetweenArr);
   }, [dateBetweenArr]);
 
@@ -320,42 +335,17 @@ function NDayReport({ AllData, airports }) {
             </div>
             <div className="filterColumn">
               <h3>Arrival date:</h3>
-              <label>From:</label>
-              <input
-                className="filter-input"
-                type="date"
-                onChange={(e) => {
-                  setDateBetweenArr([e.target.value, dateBetweenArr[1]]);
-                }}
-              />
-              <label>to</label>
-              <input
-                className="filter-input"
-                type="date"
-                onChange={(e) => {
-                  setDateBetweenArr([dateBetweenArr[0], e.target.value]);
-                }}
-              />
+              <DateRangePicker
+                onChange={setDateBetweenArr}
+                value={dateBetweenArr}
+              ></DateRangePicker>
             </div>
             <div className="filterColumn">
               <h3>Departure date:</h3>
-              <label>From:</label>
-              <input
-                className="filter-input"
-                type="date"
-                onChange={(e) => {
-                  setDateBetweenDep([e.target.value, dateBetweenDep[1]]);
-                }}
-              />
-              <label>to</label>
-              <input
-                className="filter-input"
-                type="date"
-                onChange={(e) => {
-                  console.log(e.target.value);
-                  setDateBetweenDep([dateBetweenDep[0], e.target.value]);
-                }}
-              />
+              <DateRangePicker
+                value={dateBetweenDep}
+                onChange={setDateBetweenDep}
+              ></DateRangePicker>
             </div>
             <div className="filterColumn">
               <h3>Arrival Airport:</h3>
@@ -365,9 +355,9 @@ function NDayReport({ AllData, airports }) {
                 }}
               >
                 <option value="">All</option>
-                {airports.map((airport) => (
-                  <option key={airport} value={airport}>
-                    {airport}
+                {airport.map((ap) => (
+                  <option key={ap} value={ap}>
+                    {ap}
                   </option>
                 ))}
               </select>
@@ -378,6 +368,8 @@ function NDayReport({ AllData, airports }) {
                 onChange={(e) => {
                   setCountry(e.target.value);
                 }}
+                disabled={!user?.isAdmin}
+                value={user?.subcontractorCountry}
               >
                 <option value="all">All</option>
                 <option value="ME">Montenegro</option>

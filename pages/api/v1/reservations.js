@@ -32,8 +32,9 @@ export default async (req, res) => {
       .lean();
     //include reservations that have arrived one month prior to the selected month but will leave in the selected month
     reservations2 = await Reservation.find({
+      arrivalAirport: { $in: ["ZAG", "DBV", "PUY", "SPU", "RJK"] },
       arrivalDate: { $lte: startDate },
-      depDate: { $gt: startDate, $lte: endDate },
+      depDate: { $gte: startDate, $lt: endDate },
       status: { $ne: "CANCELLED" },
       "pricing.calculated": true,
     })
@@ -43,7 +44,7 @@ export default async (req, res) => {
   if (country === 'ME') {
     reservations = await Reservation.find({
       arrivalAirport: { $in: ["TGD", "TIV"] },
-      arrivalDate: { $gt: startDate, $lte: endDate },
+      arrivalDate: { $gte: startDate, $lt: endDate },
       status: { $ne: "CANCELLED" },
       "pricing.calculated": true,
     })
@@ -52,8 +53,8 @@ export default async (req, res) => {
     //include reservations that have arrived one month prior to the selected month but will leave in the selected month
     reservations2 = await Reservation.find({
       arrivalAirport: { $in: ["TGD", "TIV"] },
-      arrivalDate: { $lte: startDate },
-      depDate: { $gt: startDate, $lte: endDate },
+      arrivalDate: { $lt: startDate },
+      depDate: { $gte: startDate, $lt: endDate },
       status: { $ne: "CANCELLED" },
       "pricing.calculated": true,
     })

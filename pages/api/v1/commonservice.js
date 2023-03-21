@@ -1,10 +1,13 @@
 import Reservation from "../../../models/ReservationModel";
 import User from "../../../models/UserModel";
 import dbConnect from "../../../lib/dbConnect";
-
+import Prices from "../../../models/PricesModel";
+import Locations from "../../../models/LocationsModel";
 
 export default async function handler(req, res) {
-    let { method, table, objectId, updates } = req.body;
+    const { method, objectId, updates, query } = req.body;
+    let table = req.body.table;
+
     switch (table) {
         case "reservations":
             table = Reservation;
@@ -12,27 +15,35 @@ export default async function handler(req, res) {
         case "users":
             table = User;
             break;
+        case "prices":
+            table = Prices;
+            break;
+        case "locations":
+            table = Locations;
+            break;
         default:
             res.status(400).json({ message: "Invalid table" });
-            return;
     }
-
-    await dbConnect();
+    try {
+        await dbConnect();
+    } catch (err) {
+        res.status(400).json({ message: err });
+    }
     switch (method) {
         case 'getall':
             try {
                 const data = await table.find({});
-                res.status(200).json(data);
+                return res.status(200).json(data);
             } catch (err) {
-                res.status(400).json({ message: err });
+                return res.status(400).json({ message: err });
             }
             break;
         case 'getone':
             try {
-                const data = await table.finOne({ _id: objectId });
-                res.status(200).json(data);
+                const data = await table.findOne({ _id: objectId });
+                return res.status(200).json(data);
             } catch (err) {
-                res.status(400).json({ message: err });
+                return res.status(400).json({ message: err });
             }
             break;
         case 'update':
@@ -40,22 +51,41 @@ export default async function handler(req, res) {
                 const data = await table.updateOne({
                     _id: objectId
                 }, updates);
-                res.status(200).json(data);
+                return res.status(200).json(data);
             } catch (err) {
-                res.status(400).json({ message: err });
+                return res.status(400).json({ message: err });
             }
             break;
         case 'delete':
             try {
                 const data = await table.deleteOne({ _id: objectId });
-                res.status(200).json(data);
+                return res.status(200).json(data);
             }
             catch (err) {
-                res.status(400).json({ message: err });
+                return res.status(400).json({ message: err });
+            }
+            break;
+        case 'customquery':
+            try {
+                const data = await table.find(query).lean();
+                return res.status(200).json(data);
+            } catch (err) {
+                return res.status(400).json({ message: err });
+            }
+            break;
+        case 'create':
+            try {
+                const insert = new table(updates);
+                const data = await insert.save();
+                return res.status(200).json(data);
+            } catch (err) {
+                return res.status(400).json({ message: err });
             }
             break;
         default:
-            res.status(400).json({ message: "Invalid method" });
-            return;
+            return res.status(200).json({ message: "Invalid method" });
+            break;
+
+
     }
 }

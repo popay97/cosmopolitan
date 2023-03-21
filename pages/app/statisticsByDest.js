@@ -300,11 +300,11 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
           </label>
           <label>
             Year:
-            <input type="number" value={year} onChange={handleYearChange} />
+            <input type='number' value={year} onChange={handleYearChange} defaultValue={new Date().getFullYear()} />
           </label>
           <label>
             Month:
-            <input type="number" value={month} onChange={handleMonthChange} />
+            <input type="number" value={month} onChange={handleMonthChange} defaultValue={new Date().getMonth + 1} />
           </label>
           <label>
             Day:

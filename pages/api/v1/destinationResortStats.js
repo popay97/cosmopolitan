@@ -1,5 +1,5 @@
 import Reservation from "../../../models/ReservationModel.js";
-
+//razdvoji booked amended cancelled
 export default async (req, res) => {
   const destionation =
     req.body.destionation == "select" || req.body.destionation == undefined

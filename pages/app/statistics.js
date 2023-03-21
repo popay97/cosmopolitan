@@ -38,8 +38,6 @@ export default function Statistics() {
       for (let i = 0; i < res.data.airports.length; i++) {
         tmp2.push(res.data.brojPutnika[res.data.airports[i]]);
       }
-      console.log(tmp1);
-      console.log(tmp2);
       tmp1 = tmp1.filter((el) => {
         return el != undefined;
       });
@@ -76,7 +74,7 @@ export default function Statistics() {
     else {
       fetchTransfers(year, month);
     }
-  }, [yearPort, monthPort]);
+  }, []);
 
 
   const columns1 = React.useMemo(
@@ -118,11 +116,18 @@ export default function Statistics() {
             <div className="period-filter">
               <div className='filter'>
                 <label htmlFor="year">Godina: </label>
-                <input type="number" id="year" onChange={(e) => setYearPort(e.target.value)} />
+                <input type="number" min={1999} max={2099} id="year" onChange={(e) => setYearPort(e.target.value)} />
               </div>
               <div className='filter'>
                 <label htmlFor="month">Mjesec: </label>
-                <input type="number" id="month" onChange={(e) => setMonthPort(e.target.value)} />
+                <input type="number" id="month" min={1} max={12} onChange={(e) => setMonthPort(e.target.value)} />
+              </div>
+              <div>
+                <button className="myButton" onClick={() => {
+                  const year = yearPort > 2000 ? yearPort : undefined;
+                  const month = monthPort >= 1 && monthPort <= 12 ? monthPort : undefined;
+                  fetchTransfers(year, month);
+                }}>Filter</button>
               </div>
             </div>
             <div className="red">

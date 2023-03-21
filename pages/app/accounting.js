@@ -211,7 +211,11 @@ export default function Accounting() {
   async function fetchData(year, month, country) {
     setLoading(true);
     try {
-      const res = await axios.post("/api/v1/reservations", { year, month, country })
+      const res = await axios.post("/api/v1/reservations", {
+        year: year,
+        month: month,
+        country: country
+      })
       if (res.status === 200) {
         setData(res.data);
       }
@@ -229,26 +233,23 @@ export default function Accounting() {
       <Navbar />
       <main>
         <div className="filterRow">
+
           <div className="filter">
-            <label htmlFor="year">Year</label>
+            <label htmlFor="month">Year & Month</label>
             <input
-              type="number"
-              name="year"
-              id="year"
-              onChange={(e) => setYear(e.target.value)}
-            />
-          </div>
-          <div className="filter">
-            <label htmlFor="month">Month</label>
-            <input
-              type="number"
+              type='month'
+              defaultValue={new Date().toISOString().slice(0, 7)}
+              value={month < 10 ? `${year}-0${month}` : `${year}-${month}`}
               name="month"
               id="month"
-              onChange={(e) => setMonth(e.target.value)}
+              onChange={(e) => {
+                setYear(parseInt(e.target.value.split("-")[0]));
+                setMonth(parseInt(e.target.value.split("-")[1]));
+              }}
             />
           </div>
           <div className="filter">
-            <label htmlFor="month">Month</label>
+            <label htmlFor="month">Country</label>
             <select
               name='country'
               onChange={(e) => setCountry(e.target.value)}

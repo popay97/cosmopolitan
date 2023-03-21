@@ -1,12 +1,15 @@
 import Head from "next/head";
 import FileComponent from "../../components/FileUpload";
-import React from "react";
+import React, { useState } from "react";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
 
 export default function Home() {
+  const [userType, setUserType] = React.useState("");
+  const [userCountry, setUserCountry] = React.useState("");
   React.useEffect(() => {
+
     const updatePricesProcedure = async () => {
       const res = await axios.get("/api/v1/updatePricesProcedure").then((res) => {
         console.log(res);
@@ -14,11 +17,15 @@ export default function Home() {
     };
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
-    console.log(user);
+    if (user?.isAdmin) {
+      setUserType("admin");
+    } else {
+      setUserType("subcontractor");
+      setUserCountry(user?.subcontractorCountry);
+    }
     if (!token) {
       window.location.href = "/";
     }
-    //updatePricesProcedure();
   }, []);
 
   return (
@@ -27,13 +34,12 @@ export default function Home() {
         <title>Cosmoplitan conrol panel</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
+      <Navbar></Navbar>
       <main>
-        <Navbar></Navbar>
         <div className="grid">
-          <div className="card">
+          {userType === 'admin' ? <div className="card">
             <FileComponent />
-          </div>
+          </div> : null}
 
           <div
             className="card"
@@ -45,7 +51,7 @@ export default function Home() {
             <h3>Report/Baza &rarr;</h3>
           </div>
 
-          <div
+          {userType === 'admin' && (<div
             className="card"
             onClick={() => {
               window.location.href = "/app/manageUsers";
@@ -53,8 +59,8 @@ export default function Home() {
             style={{ cursor: "pointer" }}
           >
             <h3>Upravljanje korisnicima &rarr;</h3>
-          </div>
-          <div
+          </div>)}
+          {userType === 'admin' && (<div
             className="card"
             onClick={() => {
               window.location.href = "/app/statistics";
@@ -62,8 +68,8 @@ export default function Home() {
             style={{ cursor: "pointer" }}
           >
             <h3>Statistike po mjesecima &rarr;</h3>
-          </div>
-          <div
+          </div>)}
+          {userType === 'admin' && (<div
             className="card"
             onClick={() => {
               window.location.href = "/app/statisticsByDest";
@@ -71,8 +77,8 @@ export default function Home() {
             style={{ cursor: "pointer" }}
           >
             <h3>Statistike po po destinacijama &rarr;</h3>
-          </div>
-          <div
+          </div>)}
+          {userType === 'admin' && (<div
             className="card"
             onClick={() => {
               window.location.href = "/app/accounting";
@@ -80,7 +86,16 @@ export default function Home() {
             style={{ cursor: "pointer" }}
           >
             <h3>Obracuni &rarr;</h3>
-          </div>
+          </div>)}
+          {userType === 'admin' && (<div
+            className="card"
+            onClick={() => {
+              window.location.href = "/app/tables";
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>Cijene i Lokacije &rarr;</h3>
+          </div>)}
         </div>
       </main>
 

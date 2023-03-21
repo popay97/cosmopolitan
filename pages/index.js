@@ -20,6 +20,18 @@ export async function getServerSideProps(context) {
 function Login({ isConnected }) {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
+  //listen for enter key press to call handleSubmit
+  React.useEffect(() => {
+    const handleEnter = async (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("login").click();
+      }
+    };
+    document.addEventListener("keydown", handleEnter);
+    return () => {
+      document.removeEventListener("keyup", handleEnter);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,9 +46,9 @@ function Login({ isConnected }) {
       } else {
         window.alert(`${loginPost.data.message}`);
       }
-    } catch (e) {
-      console.log(e);
-      window.alert("Something went wrong, please try again later");
+    } catch (err) {
+      console.log(err);
+      window.alert(err);
     }
   };
   return (
@@ -66,7 +78,7 @@ function Login({ isConnected }) {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <button className="myButton" onClick={handleSubmit}>
+        <button className="myButton" id='login' onClick={handleSubmit}>
           Login
         </button>
       </main>

@@ -94,7 +94,7 @@ function ManageUsers() {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Subcontractor coutry:</Form.Label>
+              <Form.Label>Subcontractor country:</Form.Label>
               <Form.Select
                 type="select"
                 label="Subcontractor country:"

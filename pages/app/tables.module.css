@@ -1,0 +1,58 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  width: 100%;
+}
+
+.tabs {
+  display: flex;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+}
+
+.tabButton {
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #495057;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px 20px;
+  margin-right: 10px;
+}
+
+.tabButton:focus,
+.tabButton:hover {
+  background-color: transparent;
+  border-color: #007bff;
+  color: #007bff;
+  outline: none;
+}
+
+.tabButton.primary {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.table {
+  width: 80%;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.buttons button {
+  margin-right: 10px;
+}
+
+.selectInput {
+  border: 0;
+  padding: 5px;
+  margin-bottom: 15px;
+}
