@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+import User from "./UserModel";
 
 const PricesSchema = new Schema({
     type: {
@@ -27,7 +28,7 @@ const PricesSchema = new Schema({
     },
     assignedSubcontractor: {
         type: Schema.Types.ObjectId,
-        ref: "Subcontractor",
+        ref: User,
     },
 },
     {

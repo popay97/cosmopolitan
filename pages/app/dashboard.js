@@ -8,13 +8,13 @@ import axios from "axios";
 export default function Home() {
   const [userType, setUserType] = React.useState("");
   const [userCountry, setUserCountry] = React.useState("");
+  async function loader() {
+    const data = await axios.get('/api/v1/scripts/findMissingLocations');
+    if (data.status === 200) {
+      window.alert('Job done');
+    }
+  }
   React.useEffect(() => {
-
-    const updatePricesProcedure = async () => {
-      const res = await axios.get("/api/v1/updatePricesProcedure").then((res) => {
-        console.log(res);
-      });
-    };
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     if (user?.isAdmin) {
@@ -40,7 +40,6 @@ export default function Home() {
           {userType === 'admin' ? <div className="card">
             <FileComponent />
           </div> : null}
-
           <div
             className="card"
             onClick={() => {
@@ -95,6 +94,15 @@ export default function Home() {
             style={{ cursor: "pointer" }}
           >
             <h3>Cijene i Lokacije &rarr;</h3>
+          </div>)}
+          {userType === 'admin' && (<div
+            className="card"
+            onClick={() => {
+              window.location.href = "/app/missingData";
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>Nedostajuci podaci &rarr;</h3>
           </div>)}
         </div>
       </main>

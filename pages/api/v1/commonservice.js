@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     try {
         await dbConnect();
     } catch (err) {
-        res.status(400).json({ message: err });
+        return res.status(400).json({ message: err });
     }
     switch (method) {
         case 'getall':
@@ -37,7 +37,6 @@ export default async function handler(req, res) {
             } catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         case 'getone':
             try {
                 const data = await table.findOne({ _id: objectId });
@@ -45,7 +44,6 @@ export default async function handler(req, res) {
             } catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         case 'update':
             try {
                 const data = await table.updateOne({
@@ -55,7 +53,6 @@ export default async function handler(req, res) {
             } catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         case 'delete':
             try {
                 const data = await table.deleteOne({ _id: objectId });
@@ -64,7 +61,6 @@ export default async function handler(req, res) {
             catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         case 'customquery':
             try {
                 const data = await table.find(query).lean();
@@ -72,7 +68,6 @@ export default async function handler(req, res) {
             } catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         case 'create':
             try {
                 const insert = new table(updates);
@@ -81,10 +76,8 @@ export default async function handler(req, res) {
             } catch (err) {
                 return res.status(400).json({ message: err });
             }
-            break;
         default:
             return res.status(200).json({ message: "Invalid method" });
-            break;
 
 
     }

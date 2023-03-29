@@ -1,62 +1,201 @@
 import Reservation from '../../../models/ReservationModel.js';
+import dbConnect from '../../../lib/dbConnect.js';
+import Locations from '../../../models/LocationsModel.js';
+import Prices from '../../../models/PricesModel.js';
+
 
 export default async function handler(req, res) {
+  console.log('upao u csv.js')
+  await dbConnect();
+  console.log('dbConnect')
   let updated = 0;
   let created = 0;
   let errors = 0;
   const csvData = [...req.body];
+  console.log('csvData')
   for (let i = 0; i < csvData.length; i++) {
+    console.log('for loop')
     let phone;
-    let objForSave;
+    var objForSave = {};
     if (csvData[i][10].startsWith("00")) {
       phone = "+" + csvData[i][10].slice(2);
-    } else {
+      //remove whitespaces
+      phone = phone.replace(/\s/g, "");
+    }
+    else if (csvData[i][10].startsWith("0")) {
+      phone = "+44" + csvData[i][10].slice(1);
+      //remove whitespaces
+      phone = phone.replace(/\s/g, "");
+    }
+    else {
       phone = "+" + csvData[i][10];
+      //remove whitespaces
+      phone = phone.replace(/\s/g, "");
     }
     function formatDate(str, timestamp) {
+      if (str.length === 7) {
+        str = "0" + str;
+      }
       let dd = parseInt(str.slice(0, 2));
       let mm = parseInt(str.slice(2, 4));
       let yyyy = parseInt(str.slice(4, 8));
-      let tmpDate = new Date(yyyy, mm - 1, dd, parseInt(timestamp.split(":")[0]) + 1, parseInt(timestamp.split(":")[1]));
+      let tmpDate = new Date(Date.UTC(yyyy, mm - 1, dd, parseInt(timestamp.split(":")[0]), parseInt(timestamp.split(":")[1])));
       return tmpDate;
     }
+    console.log('prepare objForSave')
     objForSave = {
-      resId: csvData[i][0],
-      status: csvData[i][1],
-      booked: formatDate(csvData[i][2], csvData[i][3]),
-      title: csvData[i][4],
-      name: csvData[i][5],
-      surname: csvData[i][6],
-      adults: parseInt(csvData[i][7]),
-      children: parseInt(csvData[i][8]),
-      infants: parseInt(csvData[i][9]),
-      arrivalAirport: csvData[i][11],
-      phone: phone,
-      transfer: csvData[i][13],
-      arrivalDate: formatDate(csvData[i][19], csvData[i][20]),
+      resId: csvData[i][0] ? csvData[i][0].trim() : null,
+      status: csvData[i][1] ? csvData[i][1].trim() : null,
+      booked: csvData[i][2] && csvData[i][3] ? formatDate(csvData[i][2], csvData[i][3]) : null,
+      title: csvData[i][4] ? csvData[i][4].trim() : null,
+      name: csvData[i][5] ? csvData[i][5].trim() : null,
+      surname: csvData[i][6] ? csvData[i][6].trim() : null,
+      adults: csvData[i][7] ? parseInt(csvData[i][7].trim()) : null,
+      children: csvData[i][8] ? parseInt(csvData[i][8].trim()) : null,
+      infants: csvData[i][9] ? parseInt(csvData[i][9].trim()) : null,
+      arrivalAirport: csvData[i][11] ? csvData[i][11].trim() : null,
+      phone: phone ? phone.trim() : null,
+      transfer: csvData[i][13] ? csvData[i][13].trim() : null,
+      arrivalDate: csvData[i][19] && csvData[i][20] ? formatDate(csvData[i][19], csvData[i][20]) : null,
       arrivalFlight: {
-        number: csvData[i][18],
-        depAirport: csvData[i][17],
-        arrTime: csvData[i][20],
+        number: csvData[i][18] ? csvData[i][18].trim() : null,
+        depAirport: csvData[i][17] ? csvData[i][17].trim() : null,
+        arrTime: csvData[i][20] ? csvData[i][20].trim() : null,
       },
-      depDate: formatDate(csvData[i][23], csvData[i][24]),
-      accom: csvData[i][21],
-      resort: csvData[i][22],
+      depDate: csvData[i][23] && csvData[i][24] ? formatDate(csvData[i][23], csvData[i][24]) : null,
+      accom: csvData[i][21] ? csvData[i][21].trim() : null,
+      resort: csvData[i][22] ? csvData[i][22].trim() : null,
       departureFlight: {
-        number: csvData[i][25],
-        arrAirport: csvData[i][26],
-        depTime: csvData[i][24],
+        number: csvData[i][25] ? csvData[i][25].trim() : null,
+        arrAirport: csvData[i][26] ? csvData[i][26].trim() : null,
+        depTime: csvData[i][24] ? csvData[i][24].trim() : null,
       },
-      accomCd: csvData[i][29],
+      accomCd: csvData[i][29] ? csvData[i][29].trim() : null,
+      hasLocation: true,
+      hasEmptyFields: false,
+      hasPricesIncoming: true,
+      hasPricesOutgoing: true,
+      billingDestination: '',
     };
+    //check if object has a field with value null
+    for (let key in Object.keys(objForSave)) {
+      if (typeof objForSave[key] === 'object') {
+        for (let key2 in Object.keys(objForSave[key])) {
+          if (objForSave[key][key2] === null) {
+            objForSave['hasEmptyFields'] = true;
+          }
+        }
+      }
+      else if (objForSave[key] === null) {
+        objForSave['hasEmptyFields'] = true;
+      }
+    }
+    //check if location exists for the given accomCd and resort
+    if (objForSave.accomCd !== null && objForSave.resort !== null) {
+      const location = await Locations.findOne({ code: objForSave.accomCd, hotel: objForSave.resort });
+      if (location) {
+        objForSave['billingDestination'] = location.destination.trim();
+      }
+      else {
+        objForSave['hasLocation'] = false;
+      }
+    }
+    if (objForSave.hasLocation) {
+      const pricesIncoming = await Prices.findOne({ airport: objForSave.arrivalAirport, destination: objForSave.billingDestination, validFrom: { $lte: objForSave.arrivalDate }, validTo: { $gte: objForSave.arrivalDate }, type: 'incoming' }).lean();
+      const pricesOutgoing = await Prices.findOne({ airport: objForSave.arrivalAirport, destination: objForSave.billingDestination, validFrom: { $lte: objForSave.booked }, validTo: { $gte: objForSave.booked }, type: 'outgoing' }).lean();
+      var pricing = {
+        ways: 0,
+        calculated: false,
+        incomingInvoice: {
+          total: 0,
+        },
+        outgoingInvoice: {
+          cost: 0,
+          handlingFee: 0,
+          total: 0,
+          totalWithFee: 0
+        }
+      }
+      if (pricesIncoming) {
+        //check if objForSave arrivalDate and depDate are in the same month and year
+        if (objForSave.arrivalDate.getMonth() === objForSave.depDate.getMonth() && objForSave.arrivalDate.getFullYear() === objForSave.depDate.getFullYear()) {
+          pricing.ways = 2;
+        }
+        else {
+          pricing.ways = 1;
+        }
+        if (objForSave.transfer === 'STR') {
+          pricing.incomingInvoice.total = Number((objForSave.adults * pricesIncoming.shared + (objForSave.children * pricesIncoming.shared * 0.5)).toFixed(3)) * pricing.ways;
+        }
+        else if (objForSave.transfer === 'PTR') {
+          //just the sum of the adults and children matters
+          if (objForSave.adults + objForSave.children <= 3) {
+            pricing.incomingInvoice.total = Number((pricesIncoming.private3less).toFixed(3)) * pricing.ways;
+          }
+          else {
+            pricing.incomingInvoice.total = Number((pricesIncoming.private3more).toFixed(3)) * pricing.ways;
+          }
+        }
+        else {
+          pricing.incomingInvoice.total = 0;
+        }
+      }
+      else {
+        objForSave['hasPricesIncoming'] = false;
+      }
+      if (pricesOutgoing) {
+        if (objForSave.transfer === 'STR') {
+          pricing.outgoingInvoice.cost = Number(pricesOutgoing.shared.toFixed(3));
+          //handling fee is 4.5 for every adult and 2.25 for every child
+          pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
+          pricing.outgoingInvoice.total = Number((pricesOutgoing.shared * objForSave.adults + (pricesOutgoing.shared * objForSave.children * 0.5)).toFixed(3)) * pricing.ways;
+          pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+        }
+        else if (objForSave.transfer === 'PTR') {
+          //just the sum of the adults and children matters
+          if (objForSave.adults + objForSave.children <= 3) {
+            pricing.outgoingInvoice.cost = Number(pricesOutgoing.private3less.toFixed(3));
+            pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
+            pricing.outgoingInvoice.total = Number(pricesOutgoing.private3less.toFixed(3)) * pricing.ways;
+            pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+          }
+          else {
+            pricing.outgoingInvoice.cost = Number(pricesOutgoing.private3more.toFixed(3));
+            pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
+            pricing.outgoingInvoice.total = Number(pricesOutgoing.private3more.toFixed(3)) * pricing.ways;
+            pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+          }
+        }
+        else {
+          pricing.outgoingInvoice.cost = 0;
+          pricing.outgoingInvoice.handlingFee = 0;
+          pricing.outgoingInvoice.total = 0;
+          pricing.outgoingInvoice.totalWithFee = 0;
+        }
+      }
+      else {
+        objForSave['hasPricesOutgoing'] = false;
+      }
+      if (pricing.incomingInvoice.total > 0 && pricing.outgoingInvoice.cost > 0) {
+        pricing.calculated = true;
+      }
+      objForSave = {
+        ...objForSave,
+        pricing: pricing
+      }
+    }
+
     try {
+      console.log('trying to save');
       const found = await Reservation.findOne({ resId: objForSave.resId });
       if (found) {
         const updatedField = await Reservation.findOneAndUpdate({ resId: objForSave.resId }, objForSave, { new: true });
+        console.log('updatedField')
         updated++;
       }
       else {
         const savedBooking = await Reservation.create(objForSave);
+        console.log('saved')
         created++;
       }
 
@@ -70,8 +209,8 @@ export default async function handler(req, res) {
       created: created,
       updated: updated,
       message: `${errors} errors occured while saving the data`,
-      data: csvData,
     });
   }
   return res.status(200).json({ success: true, created: created, updated: updated, errors: errors });
+
 }

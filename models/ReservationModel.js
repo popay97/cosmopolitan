@@ -65,6 +65,10 @@ const ReservationSchema = new Schema(
         totalWithFee: Number,
       },
     },
+    hasEmptyFields: Boolean,
+    hasLocation: Boolean,
+    hasPricesIncoming: Boolean,
+    hasPricesOutgoing: Boolean,
   },
   {
     collection: "reservation",

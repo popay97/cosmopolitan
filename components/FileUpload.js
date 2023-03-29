@@ -9,7 +9,7 @@ function fileUpload() {
   const hiddenFileInput = useRef(null);
 
 
-  
+
   const changeHandler = async (event) => {
     if (event.target.files[0]) {
       setFile(event.target.files[0]);
@@ -23,13 +23,22 @@ function fileUpload() {
     }
   };
   const handleOnSubmit = async () => {
-    console.log(obj)
     if (obj.length > 0) {
-      await axios.post('/api/v1/csv', obj).then((res) =>{
+      const chunkSize = 1000; // set the chunk size to 1000
+      const chunkedObjs = [];
+      for (let i = 0; i < obj.length; i += chunkSize) {
+        chunkedObjs.push(obj.slice(i, i + chunkSize));
+      }
+      // send each chunkedObj one by one
+      for (let i = 0; i < chunkedObjs.length; i++) {
+        const chunkedObj = chunkedObjs[i];
+        console.log(chunkedObj);
+        await axios.post('/api/v1/csv', chunkedObj).then((res) => {
           window.alert(`${res.data.created} created, ${res.data.updated} updated, ${res.data.errors} errors`)
-      }).catch(err =>{  
-        window.alert(`${err.response.data.created} created, ${err.response.data.updated} updated, ${err.response.data.message}`)
-      })
+        }).catch(err => {
+          window.alert(`${err.response.data.created} created, ${err.response.data.updated} updated, ${err.response.data.message}`)
+        })
+      }
     }
   };
 

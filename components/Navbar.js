@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import jwt from 'jsonwebtoken';
 import { useRouter } from 'next/router';
 function Navbar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const token = localStorage.getItem('cosmo_token');
+    const user = jwt.decode(token);
+    setUser(user);
+    if (!token) {
+      router.push('/');
+
+    }
+  }, []);
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -13,7 +25,7 @@ function Navbar() {
         <div onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>&larr; Back</div>
       </div>
       <h1 className="navbar__title">Cosmopolitan Management Panel</h1>
-      <div className="navbar__right">
+      {user?.isAdmin && (<div className="navbar__right">
         <button className="navbar__hamburger" onClick={toggleMenu}>
           <span></span>
           <span></span>
@@ -37,7 +49,7 @@ function Navbar() {
             </div>
           </div>
         )}
-      </div>
+      </div>)}
       <style jsx>{`
         .navbar {
           display: flex;

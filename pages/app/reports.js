@@ -661,7 +661,7 @@ function NDayReport({ AllData, airports }) {
           }
           main {
             display: flex;
-            widrt: 100%;
+            width: 100%;
             height: 100%;
             flex-direction: column;
             justify-content: start;

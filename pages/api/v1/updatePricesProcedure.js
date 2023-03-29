@@ -1,6 +1,6 @@
 import Reservation from "../../../models/ReservationModel.js";
-import mongoose from "mongoose";
 import dbConnect from "../../../lib/dbConnect.js";
+import Pricing from "../../../models/PricingModel.js";
 export default async (req, res) => {
   //connect to database
   await dbConnect();

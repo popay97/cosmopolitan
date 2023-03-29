@@ -70,8 +70,6 @@ function TransferPrices() {
         const locationres = await axios.post('/api/v1/commonservice', locationbody)
         if (locationres.status === 200) {
             let locations = locationres.data
-            // filter locations without _id
-            locations = locations.filter((item) => item._id);
 
             setLocationsData(locations);
         }
@@ -164,9 +162,9 @@ function TransferPrices() {
                     airport: "",
                     destination: "",
                     shared: "",
-                    private3less: "",
-                    private3more: "",
-                    assignedSubcontractor: "",
+                    private3less: 0,
+                    private3more: 0,
+                    assignedSubcontractor: '',
                     validFrom: "",
                     validTo: ""
                 }
@@ -208,8 +206,6 @@ function TransferPrices() {
             }
             const result = await axios.post('/api/v1/commonservice', body)
             if (result.status === 200) {
-                console.log("Data deleted");
-                //remove from array without reloading
                 let values = [...data];
                 values.splice(index, 1);
                 setData([...values]);
@@ -302,21 +298,21 @@ function TransferPrices() {
                     Add Row
                 </Button>
             </div>
-            {activeTab !== 'locations' && (<select className={styles.selectInput}
+            {activeTab === 'prices' ? (<select className={styles.selectInput}
                 value={type ? type : ""}
                 onChange={(e) => setType(e.target.value)}
             >
                 <option value="">Select</option>
                 <option value="outgoing">Outgoing</option>
                 <option value="incoming">Incoming</option>
-            </select>)}
+            </select>) : null}
             {activeTab === 'prices' ? (<div style={{ maxHeight: '70vh', overflowY: 'scroll' }}><Table striped bordered hover className={styles.table} >
                 <thead>
                     <tr>
                         <th>Airport</th>
                         <th>Destination</th>
                         <th>Shared</th>
-                        <th>Private &lt; 3</th>
+                        <th>Private &lt;= 3</th>
                         <th>Private &gt; 3</th>
                         <th>Valid From</th>
                         <th>Valid To</th>

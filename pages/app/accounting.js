@@ -70,8 +70,6 @@ export default function Accounting() {
       document.body.appendChild(link);
 
       link.click();
-
-
     })
 
   }
@@ -183,9 +181,9 @@ export default function Accounting() {
           let objMonth = new Date(value.depDate).getMonth() + 1;
           var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
           if (handlingFee) {
-            return value.pricing.outgoingInvoice.totalWithFee.toFixed(2);
+            return value.pricing.outgoingInvoice.totalWithFee.toFixed(3);
           } else {
-            return value.pricing.outgoingInvoice.total.toFixed(2);
+            return value.pricing.outgoingInvoice.total.toFixed(3);
           }
 
         }

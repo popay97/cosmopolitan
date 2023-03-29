@@ -17,6 +17,7 @@
     "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.2.1",
+    "csv-parser": "^3.0.0",
     "ftp": "^0.3.10",
     "gpg": "^0.6.0",
     "handlebars": "^4.7.7",
