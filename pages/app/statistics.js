@@ -1,180 +1,81 @@
 import Head from "next/head";
 import React from "react";
 import jwt from "jsonwebtoken";
-import TableComponent from "../../components/TableComponent";
 import Navbar from "../../components/Navbar";
-import axios from "axios";
 import { exportTableToExcel } from "../../lib/exportToExcel";
-
-
+import StatTable from "../../components/StatTable";
 export default function Statistics() {
-  const [months, setMonths] = React.useState([]);
-  const [transfersArr, setTransfersArr] = React.useState([]);
-  const [passengersArr, setPassengersArr] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
   const [yearPort, setYearPort] = React.useState(0);
   const [monthPort, setMonthPort] = React.useState(0);
-
-  const fetchTransfers = async (year, month) => {
-    let reqobj;
-    if (year && month) {
-      reqobj = {
-        year: year,
-        month: month,
-      };
-    } else {
-      reqobj = {
-        year: year,
-        month: undefined,
-      };
-    }
-    await axios.post("/api/v1/statistics", reqobj).then((res) => {
-      setMonths(res.data.months);
-      var tmp1 = [];
-      var tmp2 = [];
-      for (let i = 0; i < res.data.airports.length; i++) {
-        tmp1.push(res.data.brojTransfera[res.data.airports[i]]);
-      }
-      for (let i = 0; i < res.data.airports.length; i++) {
-        tmp2.push(res.data.brojPutnika[res.data.airports[i]]);
-      }
-      tmp1 = tmp1.filter((el) => {
-        return el != undefined;
-      });
-      tmp2 = tmp2.filter((el) => {
-        return el != undefined;
-      });
-
-      setTransfersArr(tmp1);
-      setPassengersArr(tmp2);
-      setLoading(false);
-    });
-  };
-  let displayTransfers = React.useMemo(() => {
-    return transfersArr;
-  }, [transfersArr]);
-
-
-  let displayPassengers = React.useMemo(() => {
-    return passengersArr;
-  }, [passengersArr]);
-
-
+  const [tab, setTab] = React.useState({
+    year: 0,
+    month: 0,
+  });
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     if (!token || !user.isAdmin) {
       window.location.href = "/";
     }
-    const year = yearPort > 2000 ? yearPort : undefined;
-    const month = monthPort >= 1 && monthPort <= 12 ? monthPort : undefined;
-    if (!year && !month) {
-      fetchTransfers(new Date().getFullYear());
-    }
-    else {
-      fetchTransfers(year, month);
-    }
   }, []);
 
-
-  const columns1 = React.useMemo(
-    () => [
-      {
-        Header: "Airport",
-        accessor: "airport",
-      },
-      ...months.map((m) => {
-        return {
-          Header: m,
-          accessor: m,
-        };
-      }),
-      {
-        Header: "Total",
-        accessor: "Total",
-      },
-    ],
-    [months]
-  );
-
-
-  if (loading) {
-    return <div>Loading...</div>;
-  } else {
-    return (
-      <div className="container">
-        <Head>
-          <title>Cosmoplitan conrol panel</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-
-        <main>
-          <Navbar />
-          <h1 className="title">Transferi i putnici</h1>
-          <div className="tables">
-            <h2>Po Aerodromu: </h2>
-            <div className="period-filter">
-              <div className='filter'>
-                <label htmlFor="year">Godina: </label>
-                <input type="number" min={1999} max={2099} id="year" onChange={(e) => setYearPort(e.target.value)} />
-              </div>
-              <div className='filter'>
-                <label htmlFor="month">Mjesec: </label>
-                <input type="number" id="month" min={1} max={12} onChange={(e) => setMonthPort(e.target.value)} />
-              </div>
-              <div>
-                <button className="myButton" onClick={() => {
-                  const year = yearPort > 2000 ? yearPort : undefined;
-                  const month = monthPort >= 1 && monthPort <= 12 ? monthPort : undefined;
-                  fetchTransfers(year, month);
-                }}>Filter</button>
-              </div>
+  return (
+    <div className="container">
+      <Head>
+        <title>Cosmoplitan conrol panel</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Navbar />
+      <main>
+        <h1 className="title">Transferi i putnici</h1>
+        <div className="tables">
+          <div className="period-filter">
+            <div className='filter'>
+              <label htmlFor="year">Godina: </label>
+              <input type="number" min={1999} max={2099} id="year" onChange={(e) => setYearPort(e.target.value)} />
             </div>
-            <div className="red">
-              <div className="tabela">
-                <h3>Transferi</h3>
-                <TableComponent
-                  id='transfers-dest'
-                  columns={columns1}
-                  data={displayTransfers}
-                />
-                <button
-                  className="myButton"
-                  onClick={() => {
-                    exportTableToExcel("transfers-dest");
-                  }}
-                >
-                  Export to excel
-                </button>
-              </div>
-              <div className="tabela">
-                <h3>Putnici: </h3>
-                <TableComponent
-                  id='passengers-dest'
-                  columns={columns1}
-                  data={displayPassengers}
-                />
-                <button
-                  className="myButton"
-                  onClick={() => {
-                    exportTableToExcel("passengers-dest");
-                  }}
-                >
-                  Export to excel
-                </button>
-              </div>
+            <div className='filter'>
+              <label htmlFor="month">Mjesec: </label>
+              <input type="number" id="month" min={1} max={12} onChange={(e) => setMonthPort(e.target.value)} />
+            </div>
+            <div>
+              <button className="myButton" onClick={() => {
+                setTab({ year: yearPort, month: monthPort })
+              }}>Filter</button>
             </div>
           </div>
-        </main>
-        <footer>
-          <div className="footer-div">
-            <p>Powered by</p>
-            <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
-          </div>
-        </footer>
+          <div className="red">
+            <div className="tabela">
+              <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
+              {tab?.year > 2000 ? (<StatTable year={tab.year} month={tab.month} passangers={false} id='transfersTable' />) : null}
+              {tab?.year > 2000 ? <button className="myButton" onClick={() => {
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year}`)
+                else exportTableToExcel('transfersTable', `transferi-${tab.year}-${tab.month}`)
+              }}>Export</button> : null}
 
-        <style jsx>
-          {`
+
+            </div>
+            <div className="tabela">
+              <label htmlFor="passengers" style={{ fontWeight: '600', fontSize: 18 }}>Putnici: </label>
+              {tab?.year > 2000 ? (<StatTable year={tab.year} month={tab.month} passangers={true} id='passangersTable' />) : null}
+              {tab?.year > 2000 ? (<button className="myButton" onClick={() => {
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('passangersTable', `putnici-${tab.year}`)
+                else exportTableToExcel('passangersTable', `putnici-${tab.year}-${tab.month}`)
+              }}>Export</button>) : null}
+
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer>
+        <div className="footer-div">
+          <p>Powered by</p>
+          <img src="/trid-logo.jpg" alt="Trid Logo" className="logo" />
+        </div>
+      </footer>
+
+      <style jsx>
+        {`
             .period-filter {
               display: flex;
               flex-direction: row;
@@ -202,7 +103,7 @@ export default function Statistics() {
             }
             main {
               display: flex;
-              widrt: 100%;
+              width: 100%;
               min-height: 90vh;
               flex-direction: column;
               justify-content: start;
@@ -213,8 +114,8 @@ export default function Statistics() {
             .red{
               display: flex;
               flex-direction: row;
-              justify-content: space-evenly;
               align-items: center;
+              justify-content: space-evenly;
               width: 100%;
 
             }
@@ -246,8 +147,8 @@ export default function Statistics() {
               width: 100%;
             }
           `}
-        </style>
-      </div >
-    );
-  }
+      </style>
+    </div >
+  );
+
 }

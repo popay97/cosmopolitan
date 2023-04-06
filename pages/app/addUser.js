@@ -75,7 +75,7 @@ function ManageUsers() {
                 label="User is Admin?"
                 onChange={(e) => {
                   setIsAdmin(e.target.checked);
-                  setIsSubcontractor(false);
+                  setIsSubcontractor(!e.target.checked);
                   setSubcontractorCountry("");
                 }}
                 disabled={isSubcontractor}
@@ -89,7 +89,7 @@ function ManageUsers() {
                 checked={isSubcontractor}
                 onChange={(e) => {
                   setIsSubcontractor(e.target.checked);
-                  setIsAdmin(false);
+                  setIsAdmin(!e.target.checked);
                 }}
               />
             </Form.Group>
@@ -98,12 +98,15 @@ function ManageUsers() {
               <Form.Select
                 type="select"
                 label="Subcontractor country:"
-                defaultValue=""
+                value={subcontractorCountry || "select"}
                 disabled={isAdmin}
                 onChange={(e) => {
-                  setSubcontractorCountry(e.target.value);
+                  if (e.target.value !== "select") {
+                    setSubcontractorCountry(e.target.value);
+                  }
                 }}
               >
+                <option value="select">Select</option>
                 <option value="ME">Montenegro</option>
                 <option value="HR">Croatia</option>
               </Form.Select>

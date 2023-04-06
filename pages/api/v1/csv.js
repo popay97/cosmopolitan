@@ -2,9 +2,16 @@ import Reservation from '../../../models/ReservationModel.js';
 import dbConnect from '../../../lib/dbConnect.js';
 import Locations from '../../../models/LocationsModel.js';
 import Prices from '../../../models/PricesModel.js';
-
+import NextCors from 'nextjs-cors';
+import Log from '../../../models/LogModel.js';
 
 export default async function handler(req, res) {
+
+  await NextCors(req, res, {
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    origin: '*',
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  });
   console.log('upao u csv.js')
   await dbConnect();
   console.log('dbConnect')
@@ -211,6 +218,13 @@ export default async function handler(req, res) {
       message: `${errors} errors occured while saving the data`,
     });
   }
+  const log = {
+    dateTimeStamp: new Date(),
+    type: 'import',
+    message: `Imported ${created} new bookings and updated ${updated} existing bookings`
+  }
+  await Log.create(log);
+
   return res.status(200).json({ success: true, created: created, updated: updated, errors: errors });
 
 }
