@@ -1,26 +1,110 @@
-FROM node:14-alpine AS build
+# FROM node:14-alpine AS build
 
-WORKDIR /frontend
+# WORKDIR /frontend
 
-COPY package*.json ./
+# COPY package*.json ./
 
-RUN npm install
+# RUN npm install
 
-ENV CHROME_BIN="/usr/bin/chromium-browser" \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+# ENV CHROME_BIN="/usr/bin/chromium-browser" \
+#     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+# RUN set -x \
+#     && apk update \
+#     && apk upgrade \
+#     && apk add --no-cache \
+#     udev \
+#     ttf-freefont \
+#     chromium \
+#     && npm install puppeteer
+
+
+# COPY . .
+
+# EXPOSE 3000
+
+# CMD npm run dev
+
+
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+
+
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+    if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci; \
+    elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
+
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+ENV NEXT_TELEMETRY_DISABLED 1
+
+#RUN yarn build
+
+# If using npm comment out above and use below instead
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
 RUN set -x \
     && apk update \
     && apk upgrade \
     && apk add --no-cache \
     udev \
     ttf-freefont \
+    harfbuzz \
+    freetype \
+    freetype-dev \
     chromium \
-    && npm install puppeteer
+    wget \
+    nss 
 
 
-COPY . .
+WORKDIR /app
+
+
+ENV CHROME_BIN="/usr/bin/chromium-browser" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="false"
+    
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+   
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+RUN chown -R nextjs:nodejs public/invoices
+RUN chmod -R 755 public/invoices
+
+USER nextjs
 
 EXPOSE 3000
 
-CMD npm run dev
+ENV PORT 3000
 
+CMD ["node", "server.js"]

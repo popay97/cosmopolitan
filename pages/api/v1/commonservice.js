@@ -3,11 +3,16 @@ import User from "../../../models/UserModel";
 import dbConnect from "../../../lib/dbConnect";
 import Prices from "../../../models/PricesModel";
 import Locations from "../../../models/LocationsModel";
+import Log from "../../../models/LogModel";
 
 export default async function handler(req, res) {
-    const { method, objectId, updates, query } = req.body;
+    const { method, objectId, updates, query, sort } = req.body;
     let table = req.body.table;
-
+    try {
+        await dbConnect();
+    } catch (err) {
+        return res.status(400).json({ message: err });
+    }
     switch (table) {
         case "reservations":
             table = Reservation;
@@ -21,13 +26,11 @@ export default async function handler(req, res) {
         case "locations":
             table = Locations;
             break;
+        case "log":
+            table = Log;
+            break;
         default:
             res.status(400).json({ message: "Invalid table" });
-    }
-    try {
-        await dbConnect();
-    } catch (err) {
-        return res.status(400).json({ message: err });
     }
     switch (method) {
         case 'getall':
@@ -46,11 +49,14 @@ export default async function handler(req, res) {
             }
         case 'update':
             try {
-                const data = await table.updateOne({
-                    _id: objectId
-                }, updates);
+                const data = await table.findOneAndUpdate({ _id: objectId }, {
+                    $set: {
+                        ...updates
+                    }
+                }, { new: true })
                 return res.status(200).json(data);
-            } catch (err) {
+            }
+            catch (err) {
                 return res.status(400).json({ message: err });
             }
         case 'delete':
@@ -63,7 +69,14 @@ export default async function handler(req, res) {
             }
         case 'customquery':
             try {
-                const data = await table.find(query).lean();
+                const data = await table.find(query).sort(sort).lean();
+                return res.status(200).json(data);
+            } catch (err) {
+                return res.status(400).json({ message: err });
+            }
+        case 'getlastdoc':
+            try {
+                const data = await table.find().limit().lean();
                 return res.status(200).json(data);
             } catch (err) {
                 return res.status(400).json({ message: err });

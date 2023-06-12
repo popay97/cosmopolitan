@@ -1,10 +1,13 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import Reservation from "../../models/ReservationModel";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { DownloadTableExcel } from "react-export-table-to-excel";
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
+import TimePicker from 'react-time-picker';
 import {
   dateBetweenArrFn,
   dateBetweenDepFn,
@@ -15,17 +18,22 @@ import {
   usePagination,
   useFilters,
   useGlobalFilter,
-  useAsyncDebounce,
 } from "react-table";
 import { TfiReload } from "react-icons/tfi";
 import DateRangePicker from '@wojtekmaj/react-daterange-picker/dist/entry.nostyle';
 import '@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css'
 import 'react-calendar/dist/Calendar.css';
+import CommentModal from "../../components/CommentModal";
 
 export async function getServerSideProps(context) {
+  let today = new Date()
+  let date = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000))
+
   const getData = await Reservation.find({
     status: { $ne: "CANCELLED" },
     booked: { $ne: null },
+    arrivalDate: { $gte: date },
+    depDate: { $gte: date }
   }).sort({ arrivalDate: 1 }).lean();
 
   const data = JSON.parse(JSON.stringify(getData));
@@ -81,8 +89,60 @@ function NDayReport({ AllData, airports }) {
   const [allData, setAllData] = React.useState(AllData);
   const [pageLength, setPageLength] = React.useState(8);
   const [country, setCountry] = React.useState("all");
+  const [commentModal, setCommentModal] = React.useState(false);
+  const [commentData, setCommentData] = React.useState(null);
+  const [forExport, setForExport] = React.useState(false);
   const tableRef = useRef(null);
 
+  useEffect(() => {
+    if (commentData?.resId) {
+      setCommentModal(!commentModal);
+    }
+  }, [commentData]);
+  const reapplyFilters = (page) => {
+    let dateBetweenArr1 = dateBetweenArr;
+    setDateBetweenArr(dateBetweenArr1);
+    let dateBetweenDep1 = dateBetweenDep;
+    setDateBetweenDep(dateBetweenDep1);
+    let country1 = country;
+    setCountry(country1);
+    gotoPage(page);
+  };
+  const changePickUpTime = async (e, objectId, type) => {
+
+    if (e && objectId && type) {
+      let body;
+      if (type === 'incoming')
+        body = {
+          method: "update",
+          table: "reservations",
+          objectId: objectId,
+          updates: {
+            incomingPickupTime: e
+          }
+        }
+      else if (type === 'outgoing') {
+        body = {
+          method: "update",
+          table: "reservations",
+          objectId: objectId,
+          updates: {
+            outgoingPickupTime: e
+          }
+        }
+      }
+      try {
+        let update = await axios.post("/api/v1/commonservice", body);
+        if (update.status === 200) {
+          console.log("updated")
+          console.log(update.data)
+        }
+      }
+      catch (err) {
+        console.log(err)
+      }
+    }
+  }
   const filterTypes = React.useMemo(
     () => ({
       dateBetweenDep: dateBetweenDepFn,
@@ -106,140 +166,378 @@ function NDayReport({ AllData, airports }) {
   }, [allData]);
 
   const columns = React.useMemo(
-    () => [
-      {
-        Header: "Reservation ID",
-        accessor: "resId",
-        canFilter: false,
-      },
-      {
-        Header: "Status",
-        accessor: "status",
-        canFilter: false,
-      },
-      {
-        Header: "Title",
-        accessor: "title",
-        canFilter: false,
-      },
-      {
-        Header: "First Name",
-        accessor: "name",
-        canFilter: false,
-      },
-      {
-        Header: "Last Name",
-        accessor: "surname",
-        canFilter: false,
-      },
-      {
-        Header: "Phone",
-        accessor: "phone",
-        Cell: ({ value }) => {
-          return value.replace(" ", "").toLowerCase();
-        },
-        canFilter: false,
-      },
-      {
-        Header: "Booking Date",
-        accessor: "booked",
-        Cell: ({ value }) => {
-          const date = value != undefined ? value.split("T")[0] : undefined;
-          return date;
-        },
-      },
-      {
-        Header: "Arrival Airport",
-        accessor: "arrivalAirport",
-        filterType: "text",
-        canFilter: true,
-      },
-      {
-        Header: "Arrival Date",
-        accessor: "arrivalDate",
-        Cell: ({ value }) => {
-          const date = value != undefined ? value.split("T")[0] : undefined;
-          return date;
-        },
-        filter: dateBetweenArrFn,
-        canFilter: false,
-      },
-      {
-        Header: "Arrival Flight",
-        accessor: "arrivalFlight",
-        Cell: (props) => {
-          return (
-            props.row.original.arrivalFlight.number +
-            " " +
-            props.row.original.arrivalDate?.split("T")[1].slice(0, 5) +
-            " " +
-            props.row.original.departureFlight.arrAirport +
-            " - " +
-            props.row.original.arrivalAirport
-          );
-        },
-        filter: countryFilterFn,
-        canFilter: true,
-      },
-      {
-        Header: "Departure Date",
-        accessor: "depDate",
-        Cell: ({ value }) => {
-          const date = value != undefined ? value.split("T")[0] : undefined;
-          return date;
-        },
-        filter: dateBetweenDepFn,
-        canFilter: true,
-      },
-      {
-        Header: "Departure Flight",
-        accessor: (row) =>
-          row.departureFlight.number +
-          " " +
-          row.depDate?.split("T")[1].slice(0, 5) +
-          " " +
-          row.arrivalAirport +
-          " - " +
-          row.departureFlight.arrAirport,
-        canFilter: false,
-      },
-      {
-        Header: "Transfer Type",
-        accessor: (row) => row.transfer,
-        canFilter: false,
-      },
-      {
-        Header: "Adults",
-        accessor: (row) => row.adults,
-        canFilter: false,
-      },
-      {
-        Header: "Children",
-        accessor: (row) => row.children,
-        canFilter: false,
-      },
-      {
-        Header: "Infants",
-        accessor: (row) => row.infants,
-        canFilter: false,
-      },
-      {
-        Header: "Accomodation",
-        accessor: (row) => row.accom,
-        canFilter: false,
-      },
-      {
-        Header: "Accom Cd",
-        accessor: (row) => row.accomCd,
-        canFilter: false,
-      },
-      {
-        Header: "Resort",
-        accessor: (row) => row.billingDestination,
-      },
-    ],
-    []
-  );
+    () => {
+      if (!forExport) {
+        return [
+          {
+            Header: "Reservation ID",
+            accessor: "resId",
+            canFilter: false,
+          },
+          {
+            Header: "Status",
+            accessor: "status",
+            canFilter: false,
+          },
+          {
+            Header: "Title",
+            accessor: "title",
+            canFilter: false,
+          },
+          {
+            Header: "First Name",
+            accessor: "name",
+            canFilter: false,
+          },
+          {
+            Header: "Last Name",
+            accessor: "surname",
+            canFilter: false,
+          },
+          {
+            Header: "Phone",
+            accessor: "phone",
+            Cell: ({ value }) => {
+              return value.replace("+", "00").toLowerCase();
+            },
+            canFilter: false,
+          },
+          {
+            Header: "Booking Date",
+            accessor: "booked",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+          },
+          {
+            Header: "Arrival Airport",
+            accessor: "arrivalAirport",
+            filterType: "text",
+            canFilter: true,
+          },
+          {
+            Header: "Arrival Date",
+            accessor: "arrivalDate",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+            filter: dateBetweenArrFn,
+            canFilter: false,
+          },
+          {
+            Header: "Arrival Flight",
+            accessor: "arrivalFlight",
+            Cell: (props) => {
+              return (
+                props.row.original.arrivalFlight.number +
+                " " +
+                props.row.original.arrivalDate?.split("T")[1].slice(0, 5) +
+                " " +
+                props.row.original.departureFlight.arrAirport +
+                " - " +
+                props.row.original.arrivalAirport
+              );
+            },
+            filter: countryFilterFn,
+            canFilter: true,
+          },
+          {
+            Header: "Departure Date",
+            accessor: "depDate",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+            filter: dateBetweenDepFn,
+            canFilter: true,
+          },
+          {
+            Header: "Departure Flight",
+            accessor: (row) =>
+              row.departureFlight.number +
+              " " +
+              row.depDate?.split("T")[1].slice(0, 5) +
+              " " +
+              row.arrivalAirport +
+              " - " +
+              row.departureFlight.arrAirport,
+            canFilter: false,
+          },
+          {
+            Header: "Transfer Type",
+            accessor: (row) => row.transfer,
+            canFilter: false,
+          },
+          {
+            Header: "Adults",
+            accessor: (row) => row.adults,
+            canFilter: false,
+          },
+          {
+            Header: "Children",
+            accessor: (row) => row.children,
+            canFilter: false,
+          },
+          {
+            Header: "Infants",
+            accessor: (row) => row.infants,
+            canFilter: false,
+          },
+          {
+            Header: "Accomodation",
+            accessor: (row) => row.accom,
+            canFilter: false,
+          },
+          {
+            Header: "Accom Cd",
+            accessor: (row) => row.accomCd,
+            canFilter: false,
+          },
+          {
+            Header: "Resort",
+            accessor: (row) => row.billingDestination,
+          },
+          {
+            Header: "Comments",
+            accessor: (row) => row,
+            Cell: ({ value }) => {
+              if (value?.comments?.length > 0) {
+                return (<button
+                  style={{
+                    backgroundColor: "transparent",
+                    border: 'black 1px solid',
+                    borderRadius: '5px',
+                    padding: '5px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    setCommentData({ ...value });
+
+                  }
+                  }
+                >Show comments</button>)
+              }
+              else {
+                return (<button
+                  style={{
+                    backgroundColor: "transparent",
+                    border: 'black 1px solid',
+                    borderRadius: '5px',
+                    padding: '5px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => {
+                    //trigger even if no data mutation
+                    let temp = value;
+                    setCommentData(null);
+                    setCommentData({ ...temp });
+
+                  }}
+                >Add comment</button>)
+              }
+            },
+          },
+          {
+            Header: "Incoming Pickup Time",
+            accessor: (row) => row,
+            Cell: ({ value }) => {
+              let date = new Date(value.arrivalDate)
+              let now = new Date()
+              let diff = date.getTime() - now.getTime()
+              let hours = Math.floor(diff / (1000 * 60 * 60));
+              if (hours > 0) {
+                return <div style={{ width: '150px' }}><TimePicker
+                  onChange={async (e) => {
+                    let page = pageIndex;
+                    let tmp = [...allData];
+                    let index = tmp.findIndex((el) => el.resId === value.resId);
+                    tmp[index].incomingPickupTime = e;
+                    setAllData(tmp);
+                    await changePickUpTime(e, value._id, 'incoming')
+                    gotoPage(page);
+                    reapplyFilters(page);
+                  }
+                  }
+                  value={value.incomingPickupTime ?? null}
+                ></TimePicker></div>
+              }
+              else {
+                return null
+              }
+            }
+          },
+          {
+            Header: "Outgoing Pickup Time",
+            accessor: (row) => row,
+            Cell: ({ value }) => {
+              let date = new Date(value.depDate)
+              let now = new Date()
+              let diff = date.getTime() - now.getTime()
+              let hours = Math.floor(diff / (1000 * 60 * 60));
+              if (hours > 0) {
+                return <div style={{ width: '150px' }}><TimePicker
+                  onChange={async (e) => {
+                    let page = pageIndex;
+                    let tmp = [...allData];
+                    let index = tmp.findIndex((el) => el.resId === value.resId);
+                    tmp[index].outgoingPickupTime = e;
+                    setAllData(tmp);
+                    await changePickUpTime(e, value._id, 'outgoing')
+                    reapplyFilters(page);
+                  }
+                  }
+                  value={value.outgoingPickupTime ?? null}
+                ></TimePicker></div>
+              }
+              else {
+                return null
+              }
+            }
+          },
+        ];
+      }
+
+      else {
+        return [
+          {
+            Header: "Reservation ID",
+            accessor: "resId",
+            canFilter: false,
+          },
+          {
+            Header: "Status",
+            accessor: "status",
+            canFilter: false,
+          },
+          {
+            Header: "Title",
+            accessor: "title",
+            canFilter: false,
+          },
+          {
+            Header: "First Name",
+            accessor: "name",
+            canFilter: false,
+          },
+          {
+            Header: "Last Name",
+            accessor: "surname",
+            canFilter: false,
+          },
+          {
+            Header: "Phone",
+            accessor: "phone",
+            Cell: ({ value }) => {
+              value = value.replace("+", "00").toLowerCase();
+              value = "'" + value + "'";
+              return value;
+            },
+            canFilter: false,
+          },
+          {
+            Header: "Booking Date",
+            accessor: "booked",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+          },
+          {
+            Header: "Arrival Airport",
+            accessor: "arrivalAirport",
+            filterType: "text",
+            canFilter: true,
+          },
+          {
+            Header: "Arrival Date",
+            accessor: "arrivalDate",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+            filter: dateBetweenArrFn,
+            canFilter: false,
+          },
+          {
+            Header: "Arrival Flight",
+            accessor: "arrivalFlight",
+            Cell: (props) => {
+              return (
+                props.row.original.arrivalFlight.number +
+                " " +
+                props.row.original.arrivalDate?.split("T")[1].slice(0, 5) +
+                " " +
+                props.row.original.departureFlight.arrAirport +
+                " - " +
+                props.row.original.arrivalAirport
+              );
+            },
+            filter: countryFilterFn,
+            canFilter: true,
+          },
+          {
+            Header: "Departure Date",
+            accessor: "depDate",
+            Cell: ({ value }) => {
+              const date = value != undefined ? value.split("T")[0] : undefined;
+              return date;
+            },
+            filter: dateBetweenDepFn,
+            canFilter: true,
+          },
+          {
+            Header: "Departure Flight",
+            accessor: (row) =>
+              row.departureFlight.number +
+              " " +
+              row.depDate?.split("T")[1].slice(0, 5) +
+              " " +
+              row.arrivalAirport +
+              " - " +
+              row.departureFlight.arrAirport,
+            canFilter: false,
+          },
+          {
+            Header: "Transfer Type",
+            accessor: (row) => row.transfer,
+            canFilter: false,
+          },
+          {
+            Header: "Adults",
+            accessor: (row) => row.adults,
+            canFilter: false,
+          },
+          {
+            Header: "Children",
+            accessor: (row) => row.children,
+            canFilter: false,
+          },
+          {
+            Header: "Infants",
+            accessor: (row) => row.infants,
+            canFilter: false,
+          },
+          {
+            Header: "Accomodation",
+            accessor: (row) => row.accom,
+            canFilter: false,
+          },
+          {
+            Header: "Accom Cd",
+            accessor: (row) => row.accomCd,
+            canFilter: false,
+          },
+          {
+            Header: "Resort",
+            accessor: (row) => row.billingDestination,
+          },
+        ];
+      }
+
+    }, [forExport]);
+
 
   const {
     getTableProps,
@@ -305,8 +603,10 @@ function NDayReport({ AllData, airports }) {
       document.getElementById("left").click();
     }, 300);
     if (pageLength == AllData.length + 1) {
+      setForExport(true);
       setTimeout(() => {
         document.getElementById("download-report").click();
+        setForExport(false);
         window.location.reload();
       }, 500);
     }
@@ -369,8 +669,7 @@ function NDayReport({ AllData, airports }) {
                   setCountry(e.target.value);
                 }}
                 disabled={!user?.isAdmin}
-                value={user?.subcontractorCountry}
-              >
+                value={country}>
                 <option value="all">All</option>
                 <option value="ME">Montenegro</option>
                 <option value="HR">Croatia</option>
@@ -570,7 +869,8 @@ function NDayReport({ AllData, airports }) {
             </div>
           </div>
         </div>
-      </main>
+        <CommentModal reservation={commentData} isOpen={commentModal} setOpen={setCommentModal} setAllData={setAllData} />
+      </main >
 
       <footer>
         <div className="footer-div">
@@ -691,7 +991,7 @@ function NDayReport({ AllData, airports }) {
           }
         `}
       </style>
-    </div>
+    </div >
   );
 }
 

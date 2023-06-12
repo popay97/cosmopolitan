@@ -13,7 +13,7 @@ export default function Accounting() {
   const [loading, setLoading] = useState(true);
   const [withHandlingFee, setWithHandlingFee] = useState(false);
   const [country, setCountry] = useState(null);
-
+  const [invoiceType, setInvoiceType] = useState(null);
   const monthDict = {
     0: "January",
     1: "February",
@@ -35,25 +35,77 @@ export default function Accounting() {
 
   const handleInvoice = async () => {
     //get the sum of total cost column of the current table
+    /*  let totalCost = 0;
+     for (let i = 0; i < data.length; i++) {
+       let value = data[i];
+         totalCost += parseFloat(value.pricing.outgoingInvoice.totalWithFee);
+   
+     } */
+    // calculate total sum and total handling fee 
     let totalCost = 0;
+    let totalHandlingFee = 0;
     for (let i = 0; i < data.length; i++) {
       let value = data[i];
-      let objYear = new Date(value.depDate).getFullYear();
-      let objMonth = new Date(value.depDate).getMonth() + 1;
-      var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
-      if (handlingFee) {
+      if (value.pricing.outgoingInvoice.totalWithFee != undefined) {
         totalCost += parseFloat(value.pricing.outgoingInvoice.totalWithFee);
-      } else {
-        totalCost += parseFloat(value.pricing.outgoingInvoice.total);
+      }
+      if (value.pricing.outgoingInvoice.handlingFee != undefined) {
+        totalHandlingFee += parseFloat(value.pricing.outgoingInvoice.handlingFee);
       }
     }
+    totalCost = parseFloat(totalCost.toFixed(3));
+    totalHandlingFee = parseFloat(totalHandlingFee.toFixed(3));
+    let invDate = new Date().toDateString();
+    let invNumber = year + "/" + monthDict[month - 1]
+    let invTime = new Date().toLocaleTimeString();
+    let items = [
+      {
+        service: 'Transfers executed on territory of ' + country,
+        qty: 1,
+        unit: '',
+        price: totalCost - totalHandlingFee,
+        discount: 0.00,
+        vat: 0.00,
+        priceWithVat: totalCost - totalHandlingFee,
+      },
+      {
+        service: 'Handling fee',
+        qty: 1,
+        unit: '',
+        price: totalHandlingFee,
+        discount: 0.00,
+        vat: 0.00,
+        priceWithVat: totalHandlingFee,
+      }
+    ]
+    let vatSpecs = [
+      {
+        taxRate: 0.00,
+        vatBase: totalCost - totalHandlingFee,
+        vat: 0.00,
+        priceWithVat: totalCost - totalHandlingFee
+      },
+      {
+        taxRate: 0.00,
+        vatBase: totalHandlingFee,
+        vat: 0.00,
+        priceWithVat: totalHandlingFee
 
-    const body = {
-      "year": year,
-      "month": month,
-      "totalCost": totalCost,
-      "country": country
+      }
+    ]
+    let body = {
+      invDate: invDate,
+      invNo: invNumber,
+      invTime: invTime,
+      items: items,
+      total: totalCost,
+      vatSpecs: vatSpecs,
+      month: month,
+      year: year,
     }
+
+
+
     const result = axios({
       method: "post",
       url: "/api/v1/pdfInvoice",
@@ -157,39 +209,56 @@ export default function Accounting() {
       },
       {
         Header: "Transfer Cost",
-        accessor: (row) => row.pricing.outgoingInvoice.cost.toFixed(2),
+        accessor: (row) => {
+          if (invoiceType === 'outgoing') {
+            return row.pricing.outgoingInvoice.cost.toFixed(3)
+          }
+          else if (invoiceType === 'incoming') {
+            return row.pricing.incomingInvoice.total.toFixed(3);
+          }
+        },
+
       },
       {
         Header: "Handling Fee",
         accessor: (row) => row,
         Cell: ({ value }) => {
-          let objYear = new Date(value.depDate).getFullYear();
-          let objMonth = new Date(value.depDate).getMonth() + 1;
-          if (parseInt(objYear) === parseInt(year) && parseInt(objMonth) === parseInt(month)) {
-            return value.pricing.outgoingInvoice.handlingFee;
-          } else {
-            return null;
+          if (invoiceType === 'outgoing') {
+            let objYear = new Date(value.depDate).getFullYear();
+            let objMonth = new Date(value.depDate).getMonth() + 1;
+            if (parseInt(objYear) === parseInt(year) && parseInt(objMonth) === parseInt(month)) {
+              return value.pricing.outgoingInvoice.handlingFee;
+            } else {
+              return null;
+            }
           }
-
+          else return null;
         },
+
       },
       {
         Header: "Total Cost",
         accessor: (row) => row,
         Cell: ({ value }) => {
-          let objYear = new Date(value.depDate).getFullYear();
-          let objMonth = new Date(value.depDate).getMonth() + 1;
-          var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
-          if (handlingFee) {
-            return value.pricing.outgoingInvoice.totalWithFee.toFixed(3);
-          } else {
-            return value.pricing.outgoingInvoice.total.toFixed(3);
+          if (invoiceType === 'outgoing') {
+            let objYear = new Date(value.depDate).getFullYear();
+            let objMonth = new Date(value.depDate).getMonth() + 1;
+            var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
+            if (handlingFee) {
+              return value.pricing.outgoingInvoice.totalWithFee.toFixed(3);
+            } else {
+              return value.pricing.outgoingInvoice.total.toFixed(3);
+            }
           }
+          else if (invoiceType === 'incoming') {
+            return value.pricing.incomingInvoice.total.toFixed(3);
+          }
+          else return null
 
         }
       },
     ],
-    [month, year, withHandlingFee, country]
+    [month, year, withHandlingFee, country, invoiceType]
   );
 
   useEffect(() => {
@@ -258,9 +327,20 @@ export default function Accounting() {
             </select>
           </div>
           <div className="filter">
+            <label htmlFor="month">Invoice type</label>
+            <select
+              name='invoiceType'
+              onChange={(e) => setInvoiceType(e.target.value)}
+            >
+              <option value=''>Select</option>
+              <option value='incoming'>Incoming</option>
+              <option value='outgoing'>Outgoing</option>
+            </select>
+          </div>
+          {invoiceType === 'outgoing' ? (<div className="filter">
             <label htmlFor="handlingFee">Handling Fee</label>
             <input type='checkbox' id='handlingFee' name='handlingFee' value='handlingFee' onChange={(e) => setWithHandlingFee(e.target.checked)} />
-          </div>
+          </div>) : (null)}
           <div className='filter'>
             <button
               className="myButton"
@@ -294,7 +374,7 @@ export default function Accounting() {
           </div>
         </div>
         {loading && data.length == 0 ? (
-          <div className="loading">Please select year and month</div>
+          <div className="loading">Please select required filters</div>
         ) : (
           <div className='tabelica'>
             <TableComponent

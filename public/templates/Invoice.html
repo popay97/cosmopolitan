@@ -5,163 +5,313 @@
         padding: 30px;
         border: 1px solid #eee;
         box-shadow: 0 0 10px rgba(0, 0, 0, .15);
-        font-size: 16px;
-        line-height: 24px;
+        font-size: 14px;
+        line-height: 20px;
         font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
         color: #555;
     }
-
-    .invoice-box table {
+    .cosmo-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        max-width: 400px;
+    }
+    .cosmo-info p{
+        margin: 0;
+    }
+    .invoice-number{
+        text-align: left;
+        font-size: 30px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .pre-items{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
         width: 100%;
-        line-height: inherit;
-        text-align: left;
     }
-
-    .invoice-box table td {
-        padding: 5px;
-        vertical-align: top;
+    .invoice-info{
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 50%;
     }
-
-    .invoice-box table tr td:nth-child(2) {
-        text-align: right;
+    .invoice-info p{
+        margin: 0;
     }
-
-    .invoice-box table tr.top table td {
-        padding-bottom: 20px;
+    .company-info p{
+        margin: 0;
     }
-
-    .invoice-box table tr.top table td.title {
-        font-size: 45px;
-        line-height: 45px;
-        color: #333;
+    .regular-text{
+        font-size: 12px;
     }
-
-    .invoice-box table tr.information table td {
-        padding-bottom: 40px;
-    }
-
-    .invoice-box table tr.heading td {
-        background: #eee;
-        border-bottom: 1px solid #ddd;
+    .big-text {
+        font-size: 17px;
         font-weight: bold;
+        margin-bottom: 5px;
     }
-
-    .invoice-box table tr.details td {
-        padding-bottom: 20px;
+    .items-table{
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin-bottom: 20px;
     }
-
-    .invoice-box table tr.item td {
-        border-bottom: 1px solid #eee;
+    .items-table thead{
+        border:rgba(0, 0, 0, .15) 2px solid;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        text-align: center;
+        color: #555;
     }
-
-    .invoice-box table tr.item.last td {
-        border-bottom: none;
-    }
-
-    .invoice-box table tr.total td:nth-child(2) {
+    .items-table thead tr td{
         font-weight: bold;
+        font-size: 15px;
     }
-
-    @media only screen and (max-width: 600px) {
-        .invoice-box table tr.top table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
-
-        .invoice-box table tr.information table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
+    .items-table tbody tr td{
+        text-align: center;
+        font-size: 12px;
+        font-weight: normal;
     }
-
-    /** RTL **/
-    .rtl {
-        direction: rtl;
-        font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+    .legal-total{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
     }
-
-    .rtl table {
-        text-align: right;
+    .legal{
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
-
-    .rtl table tr td:nth-child(2) {
-        text-align: left;
+    .total{
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
+    .bolded-row td{
+        font-weight: bold;
+        font-size: 17px;
+    }
+    .legal p{
+        margin: 0;
+    }
+    .vat-specs{
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 100%;
+    }
+    .vat-specs table{
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin-bottom: 20px;
+
+    }
+    .vat-specs thead{
+        border:rgba(0, 0, 0, .15) 2px solid;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        text-align: center;
+        color: #555;
+    }
+    .vat-specs td{
+        font-size: 12px;
+        text-align: center;
+    }
+    .payment-inst p{
+        margin: 0;
+    }
+    
 </style>
 
 <div>
-    {{#if isWatermark}}
-    <div style="border-width: 6px;border-style: solid; border-color: #008000;border-radius: 8px; color: #008000; opacity:0.6; position: absolute; z-index: 1; left:40%; top:30%; font-size: 60pt;-webkit-transform: rotate(-45deg);-ms-transform: rotate(-45deg);transform: rotate(-45deg); font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;">
-        PAID </div>
-    {{/if}}
     <div class="invoice-box">
-        <table cellpadding="0" cellspacing="0">
-            <tr class="top">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            <td class="title">
-                            </td>
-                            <td>
-                                Invoice #: 001<br>
-                                Created: Wed Oct 3, 2018<br>
-                                Due: Wed Oct 10, 2018
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
+        <div class="cosmo-info">
+            <p class="name">Cosmopolitan DMC d.o.o</p>
+            <p class="regular-text">Cetinjska No. 11, Podgoirca</p>
+            <p class="regular-text">TEL: +382 69 360 898 EMAIL: mrasovic@cosmopolitandmc.com</p>
+            <p class="regular-text">Company number: 03288463 VAT: 30/31-21367-2</p>
+            <p class="regular-text">Bank account: [UCB] 560-2175-92</p>
+        </div>
+        <p class="invoice-number">INVOICE {{invNo}}</p>
+        <div class="pre-items">
+            <div class="invoice-info">
+                <p class="regular-text">Date and time:      {{invDate}} {{invTime}}</p>
+                <p class="regular-text">Daate of issue:     {{invDate}}</p>
+                <p class="regular-text">Place of issue:     Office-eb278rr011</p>
+                <p class="regular-text">Currency date:           {{invDate}}</p>
+                <p class="regular-text">Number:          {{invCurrency}}</p>
 
-            <tr class="information">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            <td>
-                                Cosmopolitan DMC<br>
-                                Ulica <br>
-                                Ulcinj, Montenegro
-                            </td>
-
-                            <td>
-                                EasyJet LTD<br>
-                                London, United Kingdom<br>
-                                example@easyjet.com
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            <tr class="heading">
-                <td>
-                    Item
-                </td>
-
-                <td>
-                    Price
-                </td>
-            </tr>
-
-            {{#each items}}
-            <tr class="item">
-                <td>
-                    {{name}}
-                </td>
-                <td>
-                    €{{price}}
-                </td>
-            </tr>
-            {{/each}}
-
-            <tr class="total">
-                <td></td>
-
-                <td>
-                    Total: €{{total}}
-                </td>
-            </tr>
+            </div>
+            <div class="company-info">
+                <p class="big-text">EasyJet Holidays Limited</p>
+                <p class="regular-text">Company number:     11927917</p>
+                <p class="regular-text">Hangar 89, London Luton Airport, Luton, Bedfordshire, LU2 9PF</p>
+                <p class="regular-text">United Kingdom</p>
+                <p class="regular-text">Method of payment:   VIR - ACCOUNT</p>
+                <p class="regular-text">Operator code:    vf186ci692</p>
+            </div>
+        </div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <td>
+                        Service
+                    </td>
+                    <td>
+                        Qty
+                    </td>
+                    <td>
+                        Unit of measure
+                    </td>
+                    <td>
+                        Price without VAT
+                    </td>
+                    <td>
+                        Discount %
+                    </td>
+                    <td>
+                        VAT %
+                    </td>
+                    <td>
+                        Price with VAT
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td>
+                        {{this.service}}
+                    </td>
+                    <td>
+                        {{this.qty}}
+                    </td>
+                    <td>
+                        {{this.unit}}
+                    </td>
+                    <td>
+                        {{this.price}}
+                    </td>
+                    <td>
+                        {{this.discount}}
+                    </td>
+                    <td>
+                        {{this.vat}}
+                    </td>
+                    <td>
+                        {{this.priceWithVat}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
         </table>
+        <div class="legal-total">
+            <div class="legal">
+                <p class="regular-text">Item 1 is not subject to VAT in accordance with Article 20, paragraph 8, item 2 of the Law on Value Added Tax</p>
+                <p class="regular-text">Item 2 is exempt from taxation pursuant to Article 17, paragraphs 1 and 2 of the Law on Value Added Tax</p>
+                <p class="regular-text">Item 3 is exempt from taxation pursuant to Article 17, paragraphs 1 and 2 of the Law on Value Added Tax</p>
+            </div>
+            <div class="total">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                Price without VAT    
+                            </td>
+                            <td>
+                                {{total}}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Discount     
+                            </td>
+                            <td>
+                                0.00
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                VAT       
+                            </td>
+                            <td>
+                                0.00
+                            </td>
+                        </tr>
+                        <tr class="bolded-row">
+                            <td >
+                                Total (EUR)
+                            </td>
+                            <td >
+                                {{total}}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="vat-specs">
+            <label>VAT specification:</label>
+            <table>
+                <thead>
+                    <tr>
+                        <td>
+                            Tax rate
+                        </td>
+                        <td>
+                            VAT base
+                        </td>
+                        <td>
+                            VAT
+                        </td>
+                        <td>
+                            Price with VAT
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each vatSpecs}}
+                    <tr>
+                        <td>
+                            {{this.taxRate}}
+                        </td>
+                        <td>
+                            {{this.vatBase}}
+                        </td>
+                        <td>
+                            {{this.vat}}
+                        </td>
+                        <td>
+                            {{this.priceWithVat}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            
+        </div>
+        <div class="payment-inst">
+            <p class="regular-text">Payment instructions:</p>
+            <p class="regular-text">Beneficiary's Bank: Universal Capital banka A.D Podgorica</p>
+            <p class="regular-text">Address:    Stanka Dragojevica bb</p>
+            <p class="regular-text">City/Country:   Podgorica, Montenegro</p>
+            <p class="regular-text">SWIFT:  UNCBMEPG</p>
+            <P class="regular-text">IBAN:   ME25560005010000835959</p>
+
+        </div>
     </div>
 </div>

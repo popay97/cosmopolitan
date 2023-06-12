@@ -93,8 +93,9 @@ function dateBetweenDepFn(rows, id, filterValue) {
 }
 function countryFilterFn(rows, id, filterValue) {
 
-  if (filterValue == 'all') {
-    return rows;
+  if (filterValue !== 'ME' && filterValue !== 'HR') {
+    let rws = rows
+    return rws;
   } else {
     const rws = rows.filter((r) => {
       if (

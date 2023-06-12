@@ -49,7 +49,7 @@ export default function Statistics() {
               <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
               {tab?.year > 2000 ? (<StatTable year={tab.year} month={tab.month} passangers={false} id='transfersTable' />) : null}
               {tab?.year > 2000 ? <button className="myButton" onClick={() => {
-                if (tab.month < 1 && tab.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year}`)
+                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year}`)
                 else exportTableToExcel('transfersTable', `transferi-${tab.year}-${tab.month}`)
               }}>Export</button> : null}
 

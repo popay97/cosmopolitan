@@ -6,14 +6,14 @@ const handlebars = require("handlebars");
 async function html_to_pdf(templateHtml, dataBinding, options) {
     const template = handlebars.compile(templateHtml);
     const finalHtml = encodeURIComponent(template(dataBinding));
-
     const browser = await puppeteer.launch({
         headless: true,
-        executablePath: '/usr/bin/chromium-browser',
+        executablePath: process.env.CHROME_BIN || null,
         args: [
             '--no-sandbox',
             '--headless',
-            '--disable-gpu',
+            '--disable-setuid-sandbox',
+            "--disable-gpu",
             '--disable-dev-shm-usage'
         ]
     });
@@ -41,20 +41,13 @@ export default async function handler(req, res) {
             9: "October",
             10: "November",
             11: "December",
-        };
-        const { month, year, country, totalCost } = req.body;
+        }
         //round the total cost to 2 decimal places but keep it as a float
-        let costs = parseFloat(totalCost.toFixed(2));
-        const dataBinding = {
-            items: [
-                {
-                    name: `Tranfsers for ${monthDict[month - 1]} ${year} for ${country}`,
-                    price: costs,
-                },
-            ],
-            total: costs,
-            isWatermark: false,
-        };
+        const month = req.body.month;
+        const year = req.body.year;
+        delete req.body.month;
+        delete req.body.year;
+        const dataBinding = { ...req.body }
         const templateHtml = fs.readFileSync(
             path.join(process.cwd(), "public", "templates", "Invoice.html"),
             "utf8"
@@ -70,7 +63,8 @@ export default async function handler(req, res) {
                 bottom: "100px",
             },
             printBackground: true,
-            path: `public/invoices/${filename}`,
+            path: path.join(process.cwd(), "public", "invoices", filename),
+
         };
 
         const pdf = await html_to_pdf(templateHtml, dataBinding, options);

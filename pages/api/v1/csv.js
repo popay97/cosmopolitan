@@ -221,9 +221,10 @@ export default async function handler(req, res) {
   const log = {
     dateTimeStamp: new Date(),
     type: 'import',
-    message: `Imported ${created} new bookings and updated ${updated} existing bookings`
+    message: `Imported ${created} new bookings and updated ${updated} existing bookings, ${errors} errors occured while saving the data`
   }
-  await Log.create(log);
+  let newLog = new Log(log);
+  await newLog.save();
 
   return res.status(200).json({ success: true, created: created, updated: updated, errors: errors });
 

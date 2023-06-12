@@ -3,13 +3,16 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
-
+import LoadingOverlay from 'react-loading-overlay'
+import BounceLoader from 'react-spinners/BounceLoader'
 const MissingDataComponent = () => {
     const [missingData, setMissingData] = useState({});
+    const [active, setActive] = useState(false);
 
     const fetchData = async () => {
         const result = await axios.get("/api/v1/getMissingData");
         setMissingData(result.data);
+        // reload the page
     };
 
     useEffect(() => {
@@ -48,16 +51,20 @@ const MissingDataComponent = () => {
         }
 
         try {
+            setActive(true)
             const res = await axios.post('/api/v1/saveMissingInfo', objToSend)
             if (res.status === 200) {
                 fetchData()
+                setActive(false)
                 return
             }
             else {
                 window.alert('Something went wrong, please try again');
+                setActive(false)
             }
         }
         catch (err) {
+            setActive(false)
             window.alert('Something went wrong, please try again');
             console.log(err)
         }
@@ -82,7 +89,7 @@ const MissingDataComponent = () => {
                                 <td key={field}>
                                     <input
                                         type={row.airport ? ['private3less', 'private3more', 'shared'].includes(field) ? 'number' : ['validFrom', 'validTo'].includes(field) ? 'date' : 'text' : 'text'}
-                                        value={field.startsWith('valid') ? row[field].split('T')[0] : row[field]}
+                                        value={field.startsWith('valid') ? row[field]?.split('T')[0] : row[field]}
                                         disabled={row.airport ? (!['private3less', 'private3more', 'shared'].includes(field)) : (!['destination'].includes(field))}
                                         onChange={(e) => {
                                             let tmp = missingData
@@ -119,35 +126,45 @@ const MissingDataComponent = () => {
                     <link rel="icon" href="/favicon.ico" />
                 </Head>
                 <main>
+                    {active ? <div className="loadingOverlay">
+                        <LoadingOverlay
+                            active={active}
+                            spinner={<BounceLoader />}
+                        >
+                        </LoadingOverlay>
+                    </div> : null}
                     <Navbar />
                     <br />
                     <br />
                     <br />
-                    {Object.keys(missingData).map((table) => {
-                        if (missingData[table]?.length > 0) {
-                            return (
-                                <div key={table} className="tablewrap">
-                                    <h2 className="tabletitle">{
-                                        table.replace(/([A-Z])/g, " $1").replace(/^./, function (str) {
-                                            //if 3 words wrap the last one in brackets
-                                            return str.toUpperCase();
-                                        })
+                    {
+                        Object.keys(missingData).map((table) => {
+                            if (missingData[table]?.length > 0) {
+                                return (
+                                    <div key={table} className="tablewrap">
+                                        <h2 className="tabletitle">{
+                                            table.replace(/([A-Z])/g, " $1").replace(/^./, function (str) {
+                                                //if 3 words wrap the last one in brackets
+                                                return str.toUpperCase();
+                                            })
 
-                                    }</h2>
-                                    {renderTable(
-                                        missingData[table],
-                                        Object.keys(missingData[table][0]),
-                                        table
-                                    )}
-                                    <br />
-                                    <br />
-                                </div>
-                            );
-                        } else {
-                            return null;
-                        }
-                    })}
-                </main>
+                                        }</h2>
+                                        {renderTable(
+                                            missingData[table],
+                                            Object.keys(missingData[table][0]),
+                                            table
+                                        )}
+                                        <br />
+                                        <br />
+                                    </div>
+                                );
+                            } else {
+                                return null;
+                            }
+                        })
+                    }
+
+                </main >
                 <footer>
                     <div className="footer-div">
                         <p>Powered by</p>
@@ -195,13 +212,24 @@ const MissingDataComponent = () => {
               color: #000;
               margin-bottom: 20px;
             }
+            .loadingOverlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-evenly;
+                align-items: center;
+            }
             .logo {
               width: 3.5rem;
               margin-left: 20px;
             }
           `}
                 </style>
-            </div>
+            </div >
         );
     }
 };

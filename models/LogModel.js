@@ -20,4 +20,4 @@ const LogSchema = new Schema({
 
 LogSchema.set("toObject", { virtuals: true });
 LogSchema.set("toJSON", { virtuals: true });
-export default (mongoose.models.Prices || mongoose.model("Log", LogSchema));
+export default (mongoose.models.Log || mongoose.model("Log", LogSchema));

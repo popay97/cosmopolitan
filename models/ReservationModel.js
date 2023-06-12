@@ -69,6 +69,15 @@ const ReservationSchema = new Schema(
     hasLocation: Boolean,
     hasPricesIncoming: Boolean,
     hasPricesOutgoing: Boolean,
+    incomingPickupTime: String,
+    outgoingPickupTime: String,
+    comments: [
+      {
+        user: String,
+        comment: String,
+        date: Date,
+      }
+    ]
   },
   {
     collection: "reservation",

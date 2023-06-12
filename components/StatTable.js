@@ -129,7 +129,7 @@ const StatTable = ({ year, month, passangers = false, id = "" }) => {
                     <td>Total</td>
                     {passangers ? months.map((month) => {
                         return (
-                            <td colSpan={3}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.passangers, 0) : 0}</td>
+                            <td colSpan={3}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.passengers, 0) : 0}</td>
                         )
                     }) : months.map((month) => {
                         return (

@@ -4,17 +4,14 @@ import React, { useState } from "react";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
 import axios from "axios";
+import { useEffect } from "react";
 
 export default function Home() {
   const [userType, setUserType] = React.useState("");
   const [userCountry, setUserCountry] = React.useState("");
-  async function loader() {
-    const data = await axios.get('/api/v1/scripts/findMissingLocations');
-    if (data.status === 200) {
-      window.alert('Job done');
-    }
-  }
-  React.useEffect(() => {
+  const [lastimport, setLastImport] = React.useState({});
+
+  useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     if (user?.isAdmin) {
@@ -26,6 +23,20 @@ export default function Home() {
     if (!token) {
       window.location.href = "/";
     }
+    let begginningOfToday = new Date().setHours(0, 0, 0, 0);
+    let body = {
+      table: "log",
+      method: "customquery",
+      query: { type: "import", dateTimeStamp: { $gte: begginningOfToday } },
+      sort: { createdAt: 1 },
+    }
+    const fetchLastImport = async () => {
+      const lastLog = await axios.post("/api/v1/commonservice", body);
+      if (lastLog.data[0]) {
+        setLastImport(lastLog.data[0]);
+      }
+    }
+    fetchLastImport();
   }, []);
 
   return (
@@ -40,6 +51,14 @@ export default function Home() {
           {userType === 'admin' ? <div className="card">
             <FileComponent />
           </div> : null}
+          {/*  {userType === 'admin' ? <div
+            className="card"
+            style={{ cursor: "pointer" }}
+          >s
+            <h3>Posljednji import &rarr;</h3>
+            <p>{lastimport?.dateTimeStamp}</p>
+          </div>
+            : null} */}
           <div
             className="card"
             onClick={() => {
@@ -104,6 +123,14 @@ export default function Home() {
           >
             <h3>Nedostajuci podaci &rarr;</h3>
           </div>)}
+          {userType === 'admin' && (<div
+            className="card"
+            style={{ cursor: "pointer" }}
+          >
+            <h4>Last import log from EasyJet: </h4>
+            <h5>{new Date(lastimport?.dateTimeStamp).toLocaleDateString()}</h5>
+            <p>{lastimport?.message}</p>
+          </div>)}
         </div>
       </main>
 
@@ -125,7 +152,7 @@ export default function Home() {
         }
 
         main {
-          padding: 5rem 0;
+          padding: 1rem 0;
           flex: 1;
           display: flex;
           flex-direction: column;

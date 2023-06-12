@@ -17,25 +17,15 @@ export default async (req, res) => {
     res.status(400).json({ message: "Please select a country" });
     return;
   }
-  const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 59, 999);
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 59, 999));
   let reservations = [];
-  let reservations2 = [];
   if (country === 'CRO') {
     reservations = await Reservation.find({
-      arrivalAirport: { $in: ["ZAG", "DBV", "PUY", "SPU", "RJK"] },
-      arrivalDate: { $gt: startDate, $lte: endDate },
+      arrivalAirport: { $in: ["ZAG", "DBV", "PUY", "SPU", "RJK", 'ZAD'] },
+      depDate: { $gt: startDate, $lte: endDate },
       status: { $ne: "CANCELLED" },
-      "pricing.calculated": true,
-    })
-      .sort({ arrivalDate: 1 })
-      .lean();
-    //include reservations that have arrived one month prior to the selected month but will leave in the selected month
-    reservations2 = await Reservation.find({
-      arrivalAirport: { $in: ["ZAG", "DBV", "PUY", "SPU", "RJK"] },
-      arrivalDate: { $lte: startDate },
-      depDate: { $gte: startDate, $lt: endDate },
-      status: { $ne: "CANCELLED" },
+      transfer: { $in: ['STR', 'PTR'] },
       "pricing.calculated": true,
     })
       .sort({ arrivalDate: 1 })
@@ -44,27 +34,17 @@ export default async (req, res) => {
   if (country === 'ME') {
     reservations = await Reservation.find({
       arrivalAirport: { $in: ["TGD", "TIV"] },
-      arrivalDate: { $gte: startDate, $lt: endDate },
+      arrivalDate: { $gt: startDate, $lte: endDate },
       status: { $ne: "CANCELLED" },
+      transfer: { $in: ['STR', 'PTR'] },
       "pricing.calculated": true,
     })
       .sort({ arrivalDate: 1 })
       .lean();
-    //include reservations that have arrived one month prior to the selected month but will leave in the selected month
-    reservations2 = await Reservation.find({
-      arrivalAirport: { $in: ["TGD", "TIV"] },
-      arrivalDate: { $lt: startDate },
-      depDate: { $gte: startDate, $lt: endDate },
-      status: { $ne: "CANCELLED" },
-      "pricing.calculated": true,
-    })
-      .sort({ arrivalDate: 1 })
-      .lean();
+    reservations.sort((a, b) => {
+      return new Date(a.arrivalDate) - new Date(b.arrivalDate);
+    });
   }
-  reservations.push(...reservations2)
-  reservations.sort((a, b) => {
-    return new Date(a.arrivalDate) - new Date(b.arrivalDate);
-  });
-
   return res.status(200).json(reservations);
+
 };
