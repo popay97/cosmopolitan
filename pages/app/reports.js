@@ -212,7 +212,6 @@ function NDayReport({ AllData, airports }) {
         let update = await axios.post("/api/v1/commonservice", body);
         if (update.status === 200) {
           console.log("updated")
-          console.log(update.data)
         }
       }
       catch (err) {
@@ -498,7 +497,7 @@ function NDayReport({ AllData, airports }) {
                       padding: '15px'
                     }
                   }
-                  defaultValue={value.pricing.incomingInvoice.extraCost}
+                  defaultValue={value.pricing.incomingInvoice?.extraCost ?? 0}
                   onBlur={
                     async (e) => {
                       let tmp = [...allData];

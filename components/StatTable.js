@@ -1,11 +1,7 @@
 import React from 'react';
 import styles from './StatTable.module.css';
+
 const StatTable = ({ data, airports ,months , passangers = false, id = "", year, type }) => {
-    React.useEffect(() => {
-        console.log(data);
-        console.log(airports);
-        console.log(months);
-    }, []);
     const calculateTotals = (month, key) => {
         return airports.reduce((total, airport) => {
             const monthData = data[type][airport][month];
@@ -13,7 +9,7 @@ const StatTable = ({ data, airports ,months , passangers = false, id = "", year,
         }, 0);
     }
     const renderTable = () => {
-        const colspan = months.length * 3;
+        const colspan = passangers ? months.length * 3 : months.length * 2;
         return (
             <table className={styles.table} id={id}>
                 <thead>
@@ -90,7 +86,7 @@ const StatTable = ({ data, airports ,months , passangers = false, id = "", year,
                     <tr>
                         <td>Total</td>
                         {months.map((month) => (
-                            <td colSpan={3}>
+                            <td colSpan={passangers ? 3 : 2}>
                                 {passangers ?
                                     calculateTotals(month, 'adults') +
                                     calculateTotals(month, 'children') +

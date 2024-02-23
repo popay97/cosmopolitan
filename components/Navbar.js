@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import jwt from 'jsonwebtoken';
 import { useRouter } from 'next/router';
-function Navbar() {
+function Navbar({noBack}) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -21,9 +21,10 @@ function Navbar() {
   const menuLinks = [{ href: 'app/dashboard', title: 'Dashboard' }, { href: 'app/accounting', title: 'Obracuni' }, { href: 'app/manageUsers', title: 'Upravljanje Korisnicima' }, { href: 'app/reports', title: 'Report/Baza' }, { href: 'app/accounting', title: 'Accounting' }, { href: 'app/statistics', title: 'Statistike Mjeseci' }, { href: 'app/statisticsByDest', title: 'Statistike Destinacije' }, { href: 'app/tables', title: 'Cijene/Lokacije' },];
   return (
     <div className="navbar">
-      <div className="navbar__left">
+
+      {noBack != true ? <div className="navbar__left">
         <div onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>&larr; Back</div>
-      </div>
+      </div> : <div></div>}
       <h1 className="navbar__title">Cosmopolitan Management Panel</h1>
       {user?.isAdmin && (<div className="navbar__right">
         <button className="navbar__hamburger" onClick={toggleMenu}>

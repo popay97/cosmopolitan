@@ -74,14 +74,16 @@ export default function Statistics() {
               }}>Filter</button>
             </div>
           </div>
-          <h3>Dolasci</h3>
+          {Object.keys(data).length > 0 ?
+          <div>
+          <h2>Dolasci</h2>
           <div className="red">
             <div className="tabela">
               <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
               {!loading && <StatTable data={data} airports={airportsIn} months={months} year={tab.year} id={"incomingtransfersTable"} type="incoming"/>}
-              {!loading > 2000 ? <button className="myButton" onClick={() => {
-                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year} -incoming`)
-                else exportTableToExcel('incomingtransfersTable', `transferi-${tab.year}-${tab.month} -incoming`)
+              {!loading  ? <button className="myButton" onClick={() => {
+                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('incomingtransfersTable', `transferi ${tab.year} -incoming`)
+                else exportTableToExcel('incomingtransfersTable', `transferi ${tab.year}-${tab.month} -incoming`)
               }}>Export</button> : null}
 
 
@@ -90,20 +92,22 @@ export default function Statistics() {
               <label htmlFor="passengers" style={{ fontWeight: '600', fontSize: 18 }}>Putnici: </label>
               {!loading && <StatTable data={data} airports={airportsIn} months={months} passangers={true} year={tab.year} id="incomingpassangersTable" type="incoming"/>}
               {!loading ? (<button className="myButton" onClick={() => {
-                if (tab.month < 1 && tab.month > 12) exportTableToExcel('passangersTable', `putnici-${tab.year} -incoming`)
-                else exportTableToExcel('passangersTable', `putnici-${tab.year}-${tab.month} -incoming`)
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('incomingpassangersTable', `putnici ${tab.year} -incoming`)
+                else exportTableToExcel('incomingpassangersTable', `putnici ${tab.year}-${tab.month} -incoming`)
               }}>Export</button>) : null}
 
             </div>
           </div>
-          <h3>Odlasci</h3>
+          <br></br>
+          <br></br>
+          <h2>Odlasci</h2 >
           <div className="red">
             <div className="tabela">
               <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
               {!loading && <StatTable data={data} airports={airportsOut} months={months} year={tab.year} id={"outgoingtransfersTable"} type="outgoing"/>}
               {!loading ? <button className="myButton" onClick={() => {
-                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('outgoingtransfersTable', `transferi-${tab.year} -outgoing`)
-                else exportTableToExcel('outgoingtransfersTable', `transferi-${tab.year}-${tab.month}-outgoing`)
+                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('outgoingtransfersTable', `transferi ${tab.year} -outgoing`)
+                else exportTableToExcel('outgoingtransfersTable', `transferi ${tab.year}-${tab.month} -outgoing`)
               }}>Export</button> : null}
 
 
@@ -112,12 +116,14 @@ export default function Statistics() {
               <label htmlFor="passengers" style={{ fontWeight: '600', fontSize: 18 }}>Putnici: </label>
               {!loading && <StatTable data={data} airports={airportsOut} months={months} passangers={true} year={tab.year} id="outgoingpassangersTable" type="outgoing"/>}
               {!loading ? (<button className="myButton" onClick={() => {
-                if (tab.month < 1 && tab.month > 12) exportTableToExcel('outgoingpassangersTable', `putnici-${tab.year} -outgoing`)
-                else exportTableToExcel('outgoingpassangersTable', `putnici-${tab.year}-${tab.month} -outgoing`)
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('outgoingpassangersTable', `putnici ${tab.year} -outgoing`)
+                else exportTableToExcel('outgoingpassangersTable', `putnici ${tab.year}-${tab.month} -outgoing`)
               }}>Export</button>) : null}
 
             </div>
           </div>
+          </div>
+         : null}
         </div>
       </main>
       <footer>

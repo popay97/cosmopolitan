@@ -45,7 +45,7 @@ export default function Home() {
         <title>Cosmoplitan conrol panel</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar></Navbar>
+      <Navbar noBack={true}></Navbar>
       <main>
         <div className="grid">
           {userType === 'admin' ? <div className="card">
