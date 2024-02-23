@@ -3,21 +3,51 @@ import React from "react";
 import jwt from "jsonwebtoken";
 import Navbar from "../../components/Navbar";
 import { exportTableToExcel } from "../../lib/exportToExcel";
+import axios from 'axios';
 import StatTable from "../../components/StatTable";
+
 export default function Statistics() {
   const [yearPort, setYearPort] = React.useState(0);
   const [monthPort, setMonthPort] = React.useState(0);
+  const [data, setData] = React.useState({});
+  const [months, setMonths] = React.useState([]);
+  const [airportsIn, setAirportsIn] = React.useState([]);
+  const [airportsOut, setAirportsOut] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
   const [tab, setTab] = React.useState({
     year: 0,
     month: 0,
   });
+
   React.useEffect(() => {
     const token = localStorage.getItem("cosmo_token");
     const user = jwt.decode(token);
     if (!token || !user.isAdmin) {
       window.location.href = "/";
     }
-  }, []);
+    const fetchData = async () => {
+        let year = tab.year;
+        let month = tab.month;
+        if (!year && !month) return;
+        if (year < 2000) return;
+        if (!month || month < 1 || month > 12) {
+            month = undefined;
+        }
+        const result = await axios.post('/api/v1/statistics', {
+            year: year,
+            month: month,
+        });
+        setData(result.data);
+        setMonths(Object.keys(result.data.incoming[Object.keys(result.data.incoming)[0]]));
+        setAirportsIn(Object.keys(result.data.incoming));
+        setAirportsOut(Object.keys(result.data.outgoing));
+        setLoading(false);
+    };
+    setLoading(true);
+    fetchData();
+    
+}, [tab]);
+
 
   return (
     <div className="container">
@@ -44,23 +74,46 @@ export default function Statistics() {
               }}>Filter</button>
             </div>
           </div>
+          <h3>Dolasci</h3>
           <div className="red">
             <div className="tabela">
               <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
-              {tab?.year > 2000 ? (<StatTable year={tab.year} month={tab.month} passangers={false} id='transfersTable' />) : null}
-              {tab?.year > 2000 ? <button className="myButton" onClick={() => {
-                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year}`)
-                else exportTableToExcel('transfersTable', `transferi-${tab.year}-${tab.month}`)
+              {!loading && <StatTable data={data} airports={airportsIn} months={months} year={tab.year} id={"incomingtransfersTable"} type="incoming"/>}
+              {!loading > 2000 ? <button className="myButton" onClick={() => {
+                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('transfersTable', `transferi-${tab.year} -incoming`)
+                else exportTableToExcel('incomingtransfersTable', `transferi-${tab.year}-${tab.month} -incoming`)
               }}>Export</button> : null}
 
 
             </div>
             <div className="tabela">
               <label htmlFor="passengers" style={{ fontWeight: '600', fontSize: 18 }}>Putnici: </label>
-              {tab?.year > 2000 ? (<StatTable year={tab.year} month={tab.month} passangers={true} id='passangersTable' />) : null}
-              {tab?.year > 2000 ? (<button className="myButton" onClick={() => {
-                if (tab.month < 1 && tab.month > 12) exportTableToExcel('passangersTable', `putnici-${tab.year}`)
-                else exportTableToExcel('passangersTable', `putnici-${tab.year}-${tab.month}`)
+              {!loading && <StatTable data={data} airports={airportsIn} months={months} passangers={true} year={tab.year} id="incomingpassangersTable" type="incoming"/>}
+              {!loading ? (<button className="myButton" onClick={() => {
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('passangersTable', `putnici-${tab.year} -incoming`)
+                else exportTableToExcel('passangersTable', `putnici-${tab.year}-${tab.month} -incoming`)
+              }}>Export</button>) : null}
+
+            </div>
+          </div>
+          <h3>Odlasci</h3>
+          <div className="red">
+            <div className="tabela">
+              <label htmlFor="transfers" style={{ fontWeight: '600', fontSize: 18 }}>Transferi: </label>
+              {!loading && <StatTable data={data} airports={airportsOut} months={months} year={tab.year} id={"outgoingtransfersTable"} type="outgoing"/>}
+              {!loading ? <button className="myButton" onClick={() => {
+                if (tab?.month < 1 && tab?.month > 12) exportTableToExcel('outgoingtransfersTable', `transferi-${tab.year} -outgoing`)
+                else exportTableToExcel('outgoingtransfersTable', `transferi-${tab.year}-${tab.month}-outgoing`)
+              }}>Export</button> : null}
+
+
+            </div>
+            <div className="tabela">
+              <label htmlFor="passengers" style={{ fontWeight: '600', fontSize: 18 }}>Putnici: </label>
+              {!loading && <StatTable data={data} airports={airportsOut} months={months} passangers={true} year={tab.year} id="outgoingpassangersTable" type="outgoing"/>}
+              {!loading ? (<button className="myButton" onClick={() => {
+                if (tab.month < 1 && tab.month > 12) exportTableToExcel('outgoingpassangersTable', `putnici-${tab.year} -outgoing`)
+                else exportTableToExcel('outgoingpassangersTable', `putnici-${tab.year}-${tab.month} -outgoing`)
               }}>Export</button>) : null}
 
             </div>

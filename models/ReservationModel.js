@@ -53,7 +53,19 @@ const ReservationSchema = new Schema(
         default: false,
       },
       incomingInvoice: {
+        totalw1: {
+          type: Number,
+          default: 0,
+        },
+        totalw2: {
+          type: Number,
+          default: 0,
+        },
         total: {
+          type: Number,
+          default: 0,
+        },
+        extraCost: {
           type: Number,
           default: 0,
         }
@@ -61,6 +73,8 @@ const ReservationSchema = new Schema(
       outgoingInvoice: {
         cost: Number,
         handlingFee: Number,
+        totalw1: Number,
+        totalw2: Number,
         total: Number,
         totalWithFee: Number,
       },

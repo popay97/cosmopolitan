@@ -1,58 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 import styles from './StatTable.module.css';
-const StatTable = ({ year, month, passangers = false, id = "" }) => {
-    const [data, setData] = useState([]);
-    const [airports, setAirports] = useState([]);
-    const [months, setMonths] = useState([]);
-    const monthDict = {
-        1: 'Jan',
-        2: 'Feb',
-        3: 'Mar',
-        4: 'Apr',
-        5: 'May',
-        6: 'Jun',
-        7: 'Jul',
-        8: 'Aug',
-        9: 'Sep',
-        10: 'Oct',
-        11: 'Nov',
-        12: 'Dec',
-    };
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!year && !month) return;
-            if (year < 2000) return;
-            if (!month || month < 1 || month > 12) {
-                month = undefined;
-            }
-            const result = await axios.post('/api/v1/statistics', {
-                year,
-                month,
-            });
-            console.log(result.data);
-            setData(result.data);
-        };
-
-        fetchData();
-    }, [year, month]);
-
-    useEffect(() => {
-        if (data.length > 0) {
-            setAirports([...new Set(data.map((el) => el._id.arrivalAirport))]);
-
-            setMonths([...new Set(data.map((el) => el._id.month))]);
-        }
-    }, [data]);
+const StatTable = ({ data, airports ,months , passangers = false, id = "", year, type }) => {
+    React.useEffect(() => {
+        console.log(data);
+        console.log(airports);
+        console.log(months);
+    }, []);
+    const calculateTotals = (month, key) => {
+        return airports.reduce((total, airport) => {
+            const monthData = data[type][airport][month];
+            return total + (monthData ? monthData[key] : 0);
+        }, 0);
+    }
     const renderTable = () => {
         const colspan = months.length * 3;
         return (
             <table className={styles.table} id={id}>
+                <thead>
                 <tr>
                     <th></th>
                     {months.map((month) => {
                         return (
-                            <th colSpan={colspan / months.length}>{`${monthDict[month]}-${year}`}</th>
+                            <th colSpan={colspan / months.length}>{`${month}-${year}`}</th>
                         )
                     })}
                 </tr>
@@ -71,11 +40,12 @@ const StatTable = ({ year, month, passangers = false, id = "" }) => {
                             <>
                                 <td colSpan={1}>BOOKED</td>
                                 <td colSpan={1}>AMENDED</td>
-                                <td colSpan={1}>CANCELLED</td>
                             </>
                         )
                     })}
                 </tr>
+                </thead>
+                <tbody>
                 {airports.map((airport) => {
                     return (
                         <tr>
@@ -84,20 +54,19 @@ const StatTable = ({ year, month, passangers = false, id = "" }) => {
                                 return (
                                     <>
                                         <td colSpan={1}>{
-                                            data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month) ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month).reduce((acc, el) => acc + el.adults, 0) : 0
+                                            data[type][airport][month] ? data[type][airport][month].adults : 0
                                         }</td>
-                                        <td colSpan={1}>{data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month) ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month).reduce((acc, el) => acc + el.children, 0) : 0}</td>
-                                        <td colSpan={1}>{data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month) ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month).reduce((acc, el) => acc + el.infants, 0) : 0}</td>
+                                        <td colSpan={1}>{data[type][airport][month] ? data[type][airport][month].children : 0 }</td>
+                                        <td colSpan={1}>{data[type][airport][month] ? data[type][airport][month].infants : 0}</td>
                                     </>
                                 )
                             }) : months.map((month) => {
                                 return (
                                     <>
                                         <td colSpan={1}>{
-                                            data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'BOOKED') ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'BOOKED').reduce((acc, el) => acc + el.count, 0) : 0
+                                            data[type][airport][month] ? data[type][airport][month].booked : 0
                                         }</td>
-                                        <td colSpan={1}>{data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'AMENDED') ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'AMENDED').reduce((acc, el) => acc + el.count, 0) : 0}</td>
-                                        <td colSpan={1}>{data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'CANCELLED') ? data.filter((el) => el._id.arrivalAirport === airport && el._id.month === month && el._id.status === 'CANCELLED').reduce((acc, el) => acc + el.count, 0) : 0}</td>
+                                        <td colSpan={1}>{data[type][airport][month] ? data[type][airport][month].amended : 0}</td>
                                     </>
                                 )
                             })}
@@ -105,43 +74,40 @@ const StatTable = ({ year, month, passangers = false, id = "" }) => {
                     )
                 }
                 )}
-                <tr>
-                    <td>Subtotals</td>
-                    {passangers ? months.map((month) => {
-                        return (
-                            <>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.adults, 0) : 0}</td>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.children, 0) : 0}</td>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.infants, 0) : 0}</td>
-                            </>
-                        )
-                    }) : months.map((month) => {
-                        return (
-                            <>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month && el._id.status === 'BOOKED') ? data.filter((el) => el._id.month === month && el._id.status === 'BOOKED').reduce((acc, el) => acc + el.count, 0) : 0}</td>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month && el._id.status === 'AMENDED') ? data.filter((el) => el._id.month === month && el._id.status === 'AMENDED').reduce((acc, el) => acc + el.count, 0) : 0}</td>
-                                <td colSpan={1}>{data.filter((el) => el._id.month === month && el._id.status === 'CANCELLED') ? data.filter((el) => el._id.month === month && el._id.status === 'CANCELLED').reduce((acc, el) => acc + el.count, 0) : 0}</td>
-                            </>
-                        )
-                    })}
-                </tr>
-                <tr>
-                    <td>Total</td>
-                    {passangers ? months.map((month) => {
-                        return (
-                            <td colSpan={3}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.passengers, 0) : 0}</td>
-                        )
-                    }) : months.map((month) => {
-                        return (
-                            <td colSpan={3}>{data.filter((el) => el._id.month === month) ? data.filter((el) => el._id.month === month).reduce((acc, el) => acc + el.count, 0) : 0}</td>
-                        )
-                    })}
-                </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td>Subtotals</td>
+                        {passangers ? months.flatMap((month) => [
+                            <td>{calculateTotals(month, 'adults')}</td>,
+                            <td>{calculateTotals(month, 'children')}</td>,
+                            <td>{calculateTotals(month, 'infants')}</td>,
+                        ]) : months.flatMap((month) => [
+                            <td>{calculateTotals(month, 'booked')}</td>,
+                            <td>{calculateTotals(month, 'amended')}</td>,
+                        ])}
+                    </tr>
+                    <tr>
+                        <td>Total</td>
+                        {months.map((month) => (
+                            <td colSpan={3}>
+                                {passangers ?
+                                    calculateTotals(month, 'adults') +
+                                    calculateTotals(month, 'children') +
+                                    calculateTotals(month, 'infants') :
+                                    calculateTotals(month, 'booked') +
+                                    calculateTotals(month, 'amended') 
+                                }
+                            </td>
+                        ))}
+                    </tr>
+                </tfoot>
+
             </table>);
 
     }
     return (
-        <div className={styles.tableContainer}>
+        <div className={styles.tableContainer} key={data}>
             {renderTable()}
         </div>
     );

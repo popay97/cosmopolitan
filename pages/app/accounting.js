@@ -237,6 +237,16 @@ export default function Accounting() {
 
       },
       {
+        Header: "Extra Cost",
+        accessor: (row) => row,
+        Cell: ({ value }) => {
+          if (invoiceType === 'incoming') {
+            return !isNaN(Number(value.pricing.incomingInvoice.extraCost?.toFixed(3))) ? Number(value.pricing.incomingInvoice.extraCost.toFixed(3)) : null;
+          }
+          else return null;
+        }
+      },
+      {
         Header: "Total Cost",
         accessor: (row) => row,
         Cell: ({ value }) => {
@@ -251,9 +261,14 @@ export default function Accounting() {
             }
           }
           else if (invoiceType === 'incoming') {
-            return value.pricing.incomingInvoice.total.toFixed(3);
+            if (value.pricing.incomingInvoice.extraCost) {
+              return (value.pricing.incomingInvoice.total + value.pricing.incomingInvoice.extraCost).toFixed(3);
+            }
+            else {
+              return value.pricing.incomingInvoice.total.toFixed(3);
+            }
           }
-          else return null
+
 
         }
       },

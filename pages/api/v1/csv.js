@@ -6,20 +6,16 @@ import NextCors from 'nextjs-cors';
 import Log from '../../../models/LogModel.js';
 
 export default async function handler(req, res) {
-
   await NextCors(req, res, {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     origin: '*',
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   });
-  console.log('upao u csv.js')
   await dbConnect();
-  console.log('dbConnect')
   let updated = 0;
   let created = 0;
   let errors = 0;
   const csvData = [...req.body];
-  console.log('csvData')
   for (let i = 0; i < csvData.length; i++) {
     console.log('for loop')
     let phone;
@@ -99,78 +95,136 @@ export default async function handler(req, res) {
     }
     //check if location exists for the given accomCd and resort
     if (objForSave.accomCd !== null && objForSave.resort !== null) {
-      const location = await Locations.findOne({ code: objForSave.accomCd, hotel: objForSave.resort });
-      if (location) {
-        objForSave['billingDestination'] = location.destination.trim();
+      var location = await Locations.findOne({
+        code: objForSave.accomCd,
+      });
+      if (!location) {
+        location = await Locations.findOne({
+          hotel: objForSave.resort,
+        });
       }
-      else {
-        objForSave['hasLocation'] = false;
+      if (location) {
+        objForSave["billingDestination"] = location.destination;
+      } else {
+        objForSave["hasLocation"] = false;
+        objForSave["hasPricesIncoming"] = false;
+        objForSave["hasPricesOutgoing"] = false;
       }
     }
     if (objForSave.hasLocation) {
-      const pricesIncoming = await Prices.findOne({ airport: objForSave.arrivalAirport, destination: objForSave.billingDestination, validFrom: { $lte: objForSave.arrivalDate }, validTo: { $gte: objForSave.arrivalDate }, type: 'incoming' }).lean();
-      const pricesOutgoing = await Prices.findOne({ airport: objForSave.arrivalAirport, destination: objForSave.billingDestination, validFrom: { $lte: objForSave.booked }, validTo: { $gte: objForSave.booked }, type: 'outgoing' }).lean();
+      let arrivalDate = objForSave.arrivalDate;
+      let depDate = objForSave.depDate;
+      let destination = objForSave.billingDestination;
+      let booked = objForSave.booked;
+      const pricesIncomingArrival = await Prices.findOne({
+        airport: objForSave.arrivalAirport,
+        destination: destination,
+        validFrom: { $lte: arrivalDate },
+        validTo: { $gte: arrivalDate },
+        type: "incoming",
+      });
+      const pricesIncomingDep = await Prices.findOne({
+        airport: objForSave.arrivalAirport,
+        destination: destination,
+        validFrom: { $lte: depDate },
+        validTo: { $gte: depDate },
+        type: "incoming",
+      });
+      const pricesOutgoingArrival = await Prices.findOne({
+        airport: objForSave.arrivalAirport,
+        destination: destination,
+        validFrom: { $lte: booked },
+        validTo: { $gte: booked },
+        type: "outgoing",
+      });
+      const pricesOutgoingDep = await Prices.findOne({
+        airport: objForSave.arrivalAirport,
+        destination: destination,
+        validFrom: { $lte: booked },
+        validTo: { $gte: booked },
+        type: "outgoing",
+      });
+
       var pricing = {
         ways: 0,
         calculated: false,
         incomingInvoice: {
+          totalw1: 0,
+          totalw2: 0,
           total: 0,
         },
         outgoingInvoice: {
           cost: 0,
           handlingFee: 0,
+          totalw1: 0,
+          totalw2: 0,
           total: 0,
-          totalWithFee: 0
-        }
+          totalWithFee: 0,
+        },
+      };
+      if (arrivalDate.getMonth() === depDate.getMonth() && arrivalDate.getFullYear() === depDate.getFullYear()) {
+        pricing.ways = 2;
       }
-      if (pricesIncoming) {
-        //check if objForSave arrivalDate and depDate are in the same month and year
-        if (objForSave.arrivalDate.getMonth() === objForSave.depDate.getMonth() && objForSave.arrivalDate.getFullYear() === objForSave.depDate.getFullYear()) {
-          pricing.ways = 2;
-        }
-        else {
-          pricing.ways = 1;
-        }
+      else {
+        pricing.ways = 1;
+      }
+      if (pricesIncomingArrival && pricesIncomingDep) {
         if (objForSave.transfer === 'STR') {
-          pricing.incomingInvoice.total = Number((objForSave.adults * pricesIncoming.shared + (objForSave.children * pricesIncoming.shared * 0.5)).toFixed(3)) * pricing.ways;
+          pricing.incomingInvoice.totalw1 = Number((objForSave.adults * pricesIncomingArrival.shared + (objForSave.children * pricesIncomingArrival.shared * 0.5)).toFixed(3));
+          pricing.incomingInvoice.totalw2 = Number((objForSave.adults * pricesIncomingDep.shared + (objForSave.children * pricesIncomingDep.shared * 0.5)).toFixed(3));
+          pricing.incomingInvoice.total = Number((pricing.incomingInvoice.totalw1 + pricing.incomingInvoice.totalw2).toFixed(3));
+
         }
         else if (objForSave.transfer === 'PTR') {
           //just the sum of the adults and children matters
           if (objForSave.adults + objForSave.children <= 3) {
-            pricing.incomingInvoice.total = Number((pricesIncoming.private3less).toFixed(3)) * pricing.ways;
+            pricing.incomingInvoice.totalw1 = Number((pricesIncomingArrival.private3less).toFixed(3));
+            pricing.incomingInvoice.totalw2 = Number((pricesIncomingDep.private3less).toFixed(3));
+            pricing.incomingInvoice.total = Number((pricing.incomingInvoice.totalw1 + pricing.incomingInvoice.totalw2).toFixed(3));
           }
           else {
-            pricing.incomingInvoice.total = Number((pricesIncoming.private3more).toFixed(3)) * pricing.ways;
+            pricing.incomingInvoice.totalw1 = Number((pricesIncomingArrival.private3more).toFixed(3));
+            pricing.incomingInvoice.totalw2 = Number((pricesIncomingDep.private3more).toFixed(3));
+            pricing.incomingInvoice.total = Number((pricing.incomingInvoice.totalw1 + pricing.incomingInvoice.totalw2).toFixed(3));
           }
         }
         else {
           pricing.incomingInvoice.total = 0;
         }
+        objForSave['hasPricesIncoming'] = true;
       }
       else {
+        pricing.incomingInvoice.total = 0;
         objForSave['hasPricesIncoming'] = false;
       }
-      if (pricesOutgoing) {
+      if (pricesOutgoingArrival && pricesOutgoingDep) {
         if (objForSave.transfer === 'STR') {
-          pricing.outgoingInvoice.cost = Number(pricesOutgoing.shared.toFixed(3));
+          pricing.outgoingInvoice.cost = Number(pricesOutgoingArrival.shared.toFixed(3)) + Number(pricesOutgoingDep.shared.toFixed(3));
           //handling fee is 4.5 for every adult and 2.25 for every child
           pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
-          pricing.outgoingInvoice.total = Number((pricesOutgoing.shared * objForSave.adults + (pricesOutgoing.shared * objForSave.children * 0.5)).toFixed(3)) * pricing.ways;
-          pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+          pricing.outgoingInvoice.totalw1 = Number((pricesOutgoingArrival.shared * objForSave.adults + (pricesOutgoingArrival.shared * objForSave.children * 0.5)).toFixed(3));
+          pricing.outgoingInvoice.totalw2 = Number((pricesOutgoingDep.shared * objForSave.adults + (pricesOutgoingDep.shared * objForSave.children * 0.5)).toFixed(3));
+          pricing.outgoingInvoice.total = Number((pricing.outgoingInvoice.totalw1 + pricing.outgoingInvoice.totalw2).toFixed(3));
+          pricing.outgoingInvoice.totalWithFee = pricing.ways == 2 ? Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3)) : Number((pricing.outgoingInvoice.totalw2 + pricing.outgoingInvoice.handlingFee).toFixed(3));
         }
         else if (objForSave.transfer === 'PTR') {
           //just the sum of the adults and children matters
           if (objForSave.adults + objForSave.children <= 3) {
-            pricing.outgoingInvoice.cost = Number(pricesOutgoing.private3less.toFixed(3));
+            pricing.outgoingInvoice.cost = Number(pricesOutgoingArrival.private3less.toFixed(3)) + Number(pricesOutgoingDep.private3less.toFixed(3));
             pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
-            pricing.outgoingInvoice.total = Number(pricesOutgoing.private3less.toFixed(3)) * pricing.ways;
-            pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+            pricing.outgoingInvoice.totalw1 = Number(pricesOutgoingArrival.private3less.toFixed(3));
+            pricing.outgoingInvoice.totalw2 = Number(pricesOutgoingDep.private3less.toFixed(3));
+            pricing.outgoingInvoice.total = Number((pricing.outgoingInvoice.totalw1 + pricing.outgoingInvoice.totalw2).toFixed(3));
+            pricing.outgoingInvoice.totalWithFee = pricing.ways == 2 ? Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3)) : Number((pricing.outgoingInvoice.totalw2 + pricing.outgoingInvoice.handlingFee).toFixed(3));
           }
           else {
-            pricing.outgoingInvoice.cost = Number(pricesOutgoing.private3more.toFixed(3));
+
+            pricing.outgoingInvoice.cost = Number(pricesOutgoingArrival.private3more.toFixed(3)) + Number(pricesOutgoingDep.private3more.toFixed(3));
             pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
-            pricing.outgoingInvoice.total = Number(pricesOutgoing.private3more.toFixed(3)) * pricing.ways;
-            pricing.outgoingInvoice.totalWithFee = Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3));
+            pricing.outgoingInvoice.totalw1 = Number(pricesOutgoingArrival.private3more.toFixed(3));
+            pricing.outgoingInvoice.totalw2 = Number(pricesOutgoingDep.private3more.toFixed(3));
+            pricing.outgoingInvoice.total = Number((pricing.outgoingInvoice.totalw1 + pricing.outgoingInvoice.totalw2).toFixed(3));
+            pricing.outgoingInvoice.totalWithFee = pricing.ways == 2 ? Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3)) : Number((pricing.outgoingInvoice.totalw2 + pricing.outgoingInvoice.handlingFee).toFixed(3));
           }
         }
         else {
@@ -179,6 +233,7 @@ export default async function handler(req, res) {
           pricing.outgoingInvoice.total = 0;
           pricing.outgoingInvoice.totalWithFee = 0;
         }
+        objForSave['hasPricesOutgoing'] = true;
       }
       else {
         objForSave['hasPricesOutgoing'] = false;
@@ -196,12 +251,12 @@ export default async function handler(req, res) {
       console.log('trying to save');
       const found = await Reservation.findOne({ resId: objForSave.resId });
       if (found) {
-        const updatedField = await Reservation.findOneAndUpdate({ resId: objForSave.resId }, objForSave, { new: true });
+        await Reservation.findOneAndUpdate({ resId: objForSave.resId }, objForSave, { new: true });
         console.log('updatedField')
         updated++;
       }
       else {
-        const savedBooking = await Reservation.create(objForSave);
+        await Reservation.create(objForSave);
         console.log('saved')
         created++;
       }
@@ -212,6 +267,13 @@ export default async function handler(req, res) {
     }
   }
   if (errors > 0) {
+    const log = {
+      dateTimeStamp: new Date(),
+      type: 'import',
+      message: `Imported ${created} new bookings and updated ${updated} existing bookings, ${errors} errors occured while saving the data`
+    }
+    let newLog = new Log(log);
+    await newLog.save();
     return res.status(500).json({
       created: created,
       updated: updated,

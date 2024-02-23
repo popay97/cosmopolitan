@@ -27,12 +27,10 @@ import CommentModal from "../../components/CommentModal";
 
 export async function getServerSideProps(context) {
   let today = new Date()
-  let date = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000))
+  let date = new Date(today.getTime() - (60 * 24 * 60 * 60 * 1000))
 
   const getData = await Reservation.find({
     status: { $ne: "CANCELLED" },
-    booked: { $ne: null },
-    arrivalDate: { $gte: date },
     depDate: { $gte: date }
   }).sort({ arrivalDate: 1 }).lean();
 
@@ -92,6 +90,44 @@ function NDayReport({ AllData, airports }) {
   const [commentModal, setCommentModal] = React.useState(false);
   const [commentData, setCommentData] = React.useState(null);
   const [forExport, setForExport] = React.useState(false);
+  const [reportName, setReportName] = React.useState(`report ${country} ${new Date().toLocaleDateString()}`);
+  const [glFilter, setGlFilter] = React.useState();
+
+
+  useEffect(() => {
+    const formatDate = (date) => {
+      //check if date is a string or a date object
+      if (date === undefined || date === null) return '*';
+      if (typeof date === 'string') {
+        date = new Date(date);
+      }
+      let d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+      if (month.length < 2)
+        month = '0' + month;
+      if (day.length < 2)
+        day = '0' + day;
+
+      return [year, month, day].join('-');
+    }
+
+    if (Array.isArray(dateBetweenArr) && Array.isArray(dateBetweenDep)) {
+      setReportName(`Report ${country} Filters: arrivals ${formatDate(dateBetweenArr[0])} - ${formatDate(dateBetweenArr[1])}__ departures ${formatDate(dateBetweenDep[0])}  ${formatDate(dateBetweenDep[1])}`)
+    }
+    else if (Array.isArray(dateBetweenArr) && !Array.isArray(dateBetweenDep)) {
+      setReportName(`${country} arrivals between ${formatDate(dateBetweenArr[0])} - ${formatDate(dateBetweenArr[1])}`)
+    }
+    else if (!Array.isArray(dateBetweenArr) && Array.isArray(dateBetweenDep)) {
+      setReportName(`${country} departures between ${formatDate(dateBetweenDep[0])} - ${formatDate(dateBetweenDep[1])}`)
+    }
+    else {
+      setReportName(`report ${country} ${new Date().toLocaleDateString()}`)
+    }
+  }, [dateBetweenArr, dateBetweenDep, country])
+
   const tableRef = useRef(null);
 
   useEffect(() => {
@@ -99,15 +135,30 @@ function NDayReport({ AllData, airports }) {
       setCommentModal(!commentModal);
     }
   }, [commentData]);
+
+
   const reapplyFilters = (page) => {
-    let dateBetweenArr1 = dateBetweenArr;
-    setDateBetweenArr(dateBetweenArr1);
-    let dateBetweenDep1 = dateBetweenDep;
-    setDateBetweenDep(dateBetweenDep1);
+    let globalFilter1 = glFilter;
+    if (globalFilter1 !== '' && globalFilter1 !== undefined && globalFilter1 !== null) {
+      setGlobalFilter(globalFilter1);
+      return
+    }
+    if (Array.isArray(dateBetweenArr)) {
+      let dateBetweenArr1 = dateBetweenArr;
+
+      setDateBetweenArr(dateBetweenArr1);
+    }
+    if (Array.isArray(dateBetweenDep)) {
+      let dateBetweenDep1 = dateBetweenDep;
+      setDateBetweenDep(dateBetweenDep1);
+    }
     let country1 = country;
     setCountry(country1);
     gotoPage(page);
   };
+
+
+
   const changePickUpTime = async (e, objectId, type) => {
 
     if (e && objectId && type) {
@@ -143,6 +194,36 @@ function NDayReport({ AllData, airports }) {
       }
     }
   }
+
+
+
+  const changeExtraCosts = async (pricing, objectId) => {
+    if (pricing && objectId) {
+      let body = {
+        method: "update",
+        table: "reservations",
+        objectId: objectId,
+        updates: {
+          pricing: pricing
+        }
+      }
+      console.log(body)
+      try {
+        let update = await axios.post("/api/v1/commonservice", body);
+        if (update.status === 200) {
+          console.log("updated")
+          console.log(update.data)
+        }
+      }
+      catch (err) {
+        console.log(err)
+      }
+
+    }
+  }
+
+
+
   const filterTypes = React.useMemo(
     () => ({
       dateBetweenDep: dateBetweenDepFn,
@@ -161,9 +242,13 @@ function NDayReport({ AllData, airports }) {
     []
   );
 
+
+
   const displayData = React.useMemo(() => {
     return allData;
   }, [allData]);
+
+
 
   const columns = React.useMemo(
     () => {
@@ -356,7 +441,7 @@ function NDayReport({ AllData, airports }) {
                     tmp[index].incomingPickupTime = e;
                     setAllData(tmp);
                     await changePickUpTime(e, value._id, 'incoming')
-                    gotoPage(page);
+
                     reapplyFilters(page);
                   }
                   }
@@ -394,6 +479,36 @@ function NDayReport({ AllData, airports }) {
               else {
                 return null
               }
+            }
+          },
+          {
+            Header: "Extra Costs",
+            accessor: (row) => row,
+            Cell: ({ value }) => {
+
+              return <div style={{ width: '110px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <input
+                  id={`extraCosts${value.resId}`}
+                  style={
+                    {
+                      width: '100px',
+                      height: '20px',
+                      borderRadius: '5px',
+                      border: '1px solid lightgrey',
+                      padding: '15px'
+                    }
+                  }
+                  defaultValue={value.pricing.incomingInvoice.extraCost}
+                  onBlur={
+                    async (e) => {
+                      let tmp = [...allData];
+                      let index = tmp.findIndex((el) => el.resId === value.resId);
+                      tmp[index].pricing.incomingInvoice.extraCost = e.target.value;
+                      await changeExtraCosts(tmp[index].pricing, value._id)
+                    }
+                  }
+                />
+              </div>
             }
           },
         ];
@@ -554,6 +669,7 @@ function NDayReport({ AllData, airports }) {
     nextPage,
     setFilter,
     previousPage,
+    globalFilter,
     setGlobalFilter,
     state: { pageIndex, pageSize },
   } = useTable(
@@ -582,6 +698,7 @@ function NDayReport({ AllData, airports }) {
       console.log(res.data);
       setAllData(res.data);
     });
+    setReportName(country + " " + days + " days report " + transferType);
   };
 
   React.useEffect(() => {
@@ -613,7 +730,7 @@ function NDayReport({ AllData, airports }) {
   }, [pageLength]);
 
   return (
-    <div className="container">
+    <div className="container" >
       <Head>
         <title>Cosmopolitan Control Panel</title>
         <link rel="icon" href="/favicon.ico" />
@@ -630,6 +747,7 @@ function NDayReport({ AllData, airports }) {
                 type="text"
                 onChange={(e) => {
                   setGlobalFilter(e.target.value || undefined);
+                  setGlFilter(e.target.value || undefined);
                 }}
               />
             </div>
@@ -774,7 +892,7 @@ function NDayReport({ AllData, airports }) {
                 Export excel
               </button>
               <DownloadTableExcel
-                filename="report"
+                filename={reportName}
                 sheet="trnasfers"
                 currentTableRef={tableRef.current}
               >

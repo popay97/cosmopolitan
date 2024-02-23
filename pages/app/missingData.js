@@ -5,6 +5,8 @@ import Head from "next/head";
 import Navbar from "../../components/Navbar";
 import LoadingOverlay from 'react-loading-overlay'
 import BounceLoader from 'react-spinners/BounceLoader'
+import 'react-datepicker/dist/react-datepicker.css';
+
 const MissingDataComponent = () => {
     const [missingData, setMissingData] = useState({});
     const [active, setActive] = useState(false);
@@ -20,35 +22,12 @@ const MissingDataComponent = () => {
     }, []);
 
 
-    const handleSave = async (tableName, index, pricingType) => {
+    const handleSave = async (tableName, missingObj) => {
         var objToSend = {
             type: tableName,
-            missingObj: null
+            missingObj: missingObj
         }
-        if (tableName === 'location') {
-            objToSend = {
-                type: tableName,
-                missingObj: missingData['missingLocations'][index]
-            }
-
-        }
-        else if (tableName === 'price') {
-            if (pricingType === 'incoming') {
-                objToSend = {
-                    type: tableName,
-                    missingObj: missingData['missingPricesIncoming'][index]
-                }
-
-            }
-            else if (pricingType === 'outgoing') {
-                objToSend = {
-                    type: tableName,
-                    missingObj: missingData['missingPricesOutgoing'][index]
-                }
-
-            }
-
-        }
+       
 
         try {
             setActive(true)
@@ -69,54 +48,7 @@ const MissingDataComponent = () => {
             console.log(err)
         }
     }
-    const renderTable = (tableData, tableHeaders, table) => (
-        <table>
-            <thead>
-                <tr>
-                    {tableHeaders
-                        .filter((el) => el != "assignedSubcontractor" && el != "type")
-                        .map((header) => (
-                            <th key={header}>{header}</th>
-                        ))}
-                </tr>
-            </thead>
-            <tbody>
-                {tableData.map((row, index) => (
-                    <tr key={index}>
-                        {Object.keys(row)
-                            .filter((el) => el != "assignedSubcontractor" && el != "type")
-                            .map((field, index2) => (
-                                <td key={field}>
-                                    <input
-                                        type={row.airport ? ['private3less', 'private3more', 'shared'].includes(field) ? 'number' : ['validFrom', 'validTo'].includes(field) ? 'date' : 'text' : 'text'}
-                                        value={field.startsWith('valid') ? row[field]?.split('T')[0] : row[field]}
-                                        disabled={row.airport ? (!['private3less', 'private3more', 'shared'].includes(field)) : (!['destination'].includes(field))}
-                                        onChange={(e) => {
-                                            let tmp = missingData
-                                            tmp[table][index][field] = e.target.value
-                                            setMissingData({ ...tmp })
-                                        }}
-                                    />
-                                </td>
-                            ))}
-                        <td>
-                            <button className='myButton' onClick={() => {
-                                if (Object.keys(row)?.includes('type')) {
-                                    handleSave('price', index)
-                                }
-                                else {
-                                    handleSave('location', index, row.type)
-                                }
-                            }} style={{ paddingInline: '10px', paddingTop: '5px', paddingBottom: '5px' }}>
-                                Save
-                            </button>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-    if (Object.keys(missingData)?.length === 0) {
+    if (Object.keys(missingData)?.length === 0 || active === true) {
         return <div>Loading...</div>;
     } else {
         return (
@@ -136,33 +68,13 @@ const MissingDataComponent = () => {
                     <Navbar />
                     <br />
                     <br />
-                    <br />
-                    {
-                        Object.keys(missingData).map((table) => {
-                            if (missingData[table]?.length > 0) {
-                                return (
-                                    <div key={table} className="tablewrap">
-                                        <h2 className="tabletitle">{
-                                            table.replace(/([A-Z])/g, " $1").replace(/^./, function (str) {
-                                                //if 3 words wrap the last one in brackets
-                                                return str.toUpperCase();
-                                            })
+                    <MissingDataComp
+                        missingLocations={missingData["missingLocations"]}
+                        missingPricesOutgoing={missingData["missingPricesOutgoing"]}
+                        missingPricesIncoming={missingData["missingPricesIncoming"]}
+                        handleSave={handleSave}
+                    />
 
-                                        }</h2>
-                                        {renderTable(
-                                            missingData[table],
-                                            Object.keys(missingData[table][0]),
-                                            table
-                                        )}
-                                        <br />
-                                        <br />
-                                    </div>
-                                );
-                            } else {
-                                return null;
-                            }
-                        })
-                    }
 
                 </main >
                 <footer>
@@ -235,3 +147,146 @@ const MissingDataComponent = () => {
 };
 
 export default MissingDataComponent;
+
+
+const MissingDataComp = ({ missingLocations, missingPricesOutgoing, missingPricesIncoming, handleSave }) => {
+    const [currentPrices, setCurrentPrices] = useState({ 
+        outgoing: missingPricesOutgoing,
+        incoming: missingPricesIncoming
+    });
+    const [currentLocations, setCurrentLocations] = useState(missingLocations);
+
+    const renderInputField = (value, onChange, type = 'text') => {
+        return value !== null ? (
+            <input type="text" value={value} disabled className="form-control" style={{fontSize: 12}} />
+        ) : (
+            <input type={type} onChange={onChange} className="form-control" />
+        );
+    };
+    const InputGroup = ({ label, value, onChange, type = 'text', disabled = false }) => {
+        return (
+          <div className="input-group mb-2">
+            <div className="input-group-prepend">
+              <span  id="basic-addon1">{label}</span>
+            </div>
+            <input
+              type={type}
+              className="form-control"
+              value={value}
+              onChange={onChange}
+              disabled={disabled}
+              style={{ minWidth: '120px' }} // Ensure minimum width for content visibility
+            />
+          </div>
+        );
+      };
+      
+    // Renders price fields
+    const renderPriceFields = (price, index ) => {
+        let type = index < currentPrices.outgoing.length ? 'outgoing' : 'incoming';
+        let realIndex = index < currentPrices.outgoing.length ? index : index - currentPrices.outgoing.length;
+        const handleChange = (field, value) => {
+            setCurrentPrices({
+                ...currentPrices,
+                [type]: currentPrices[type].map((price, i) => {
+                    if (i === realIndex) {
+                        return { ...price, [field]: value };
+                    }
+                    return price;
+                })
+            });
+        };
+        
+        return (
+            <div className="row mb-2" key={index}>
+              <div className="col">
+                <InputGroup label="Airport" value={price.airport} disabled={true} />
+              </div>
+              <div className="col">
+                <InputGroup label="Destination" value={price.destination} disabled={true} />
+              </div>
+              <div className="col">
+                <InputGroup label="Shared" value={price.shared || ''} onChange={(e) => {
+                    handleChange('shared', Number(e.target.value));
+                }} type="number" />
+              </div>
+              <div className="col">
+                <InputGroup label="<=3 passangers" value={price.private3less || ''} onChange={(e) => {
+                    handleChange('private3less', Number(e.target.value));
+                }} type="number" />
+              </div>
+              <div className="col">
+                <InputGroup label=">3 passangers" value={price.private3more || ''} onChange={(e) => {
+                    handleChange('private3more', Number(e.target.value));
+                }} type="number"  />
+              </div>
+              <div className="col">
+                <InputGroup label="Valid From" value={price.validFrom ? new Date(price.validFrom).toISOString().split("T")[0] : ''} onChange={(e) => {
+                    //convert the picker date to UTC, assume user is in UTC+2
+                    let formattedValue = new Date(Date.UTC(e.target.value.split('-')[0], e.target.value.split('-')[1] - 1, e.target.value.split('-')[2], 0, 0, 0));
+                    console.log(formattedValue);
+                    handleChange('validFrom', formattedValue);
+                }} type="date" disabled={price.validFrom !== null} />
+              </div>
+              <div className="col">
+                <InputGroup label="Valid To" value={price.validTo ? new Date(price.validTo).toISOString().split("T")[0] : '' } onChange={(e) => {
+
+                    let formattedValue = new Date(Date.UTC(e.target.value.split('-')[0], e.target.value.split('-')[1] - 1, e.target.value.split('-')[2], 23, 59, 59));
+                    console.log(formattedValue);
+                    handleChange('validTo', formattedValue);
+                }} type="date" disabled={price.validTo !== null} />
+              </div>
+              <div className="col">
+                <InputGroup label="Type" value={price.type} disabled={true} />
+                </div>
+              <div className="col">
+                    <button onClick={() => handleSave('price', currentPrices[type][realIndex])} className="btn btn-primary">Save</button>
+                </div>
+                {price.count && (
+                    <div className="col-12 text-muted">
+                        <small>
+                            {price.count} reservations missing this price, dates span {price.minReferenceDate} - {price.maxReferenceDate}
+                        </small>
+                        </div>
+                )}
+            </div>
+          );
+    };
+
+    return (
+        <div className="container">
+            <div className="row">
+                <div className="col">
+                    <h4>Missing Prices</h4>
+                    {currentPrices.outgoing.concat(currentPrices.incoming).map(renderPriceFields)}
+                </div>
+                <div className="col">
+                    <h4>Missing Locations</h4>
+                    {currentLocations.map((location, index) => (
+                        <div className="row mb-2" key={index}>
+                            <div className="col">
+                                {renderInputField(location.code, () => {}, 'text')}
+                            </div>
+                            <div className="col">
+                                {renderInputField(location.hotel, () => {}, 'text')}
+                            </div>
+                            <div className="col">
+                                <input type="text" onChange={(e) => {
+                                    setCurrentLocations(currentLocations.map((loc, i) => {
+                                        if (i === index) {
+                                            return { ...loc, destination: e.target.value };
+                                        }
+                                        return loc;
+                                    }));
+                                }} className="form-control" />
+                            </div>
+                            <div className="col">
+                                <button onClick={() => handleSave( 'location', currentLocations[index])} className="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};

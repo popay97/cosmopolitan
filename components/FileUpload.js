@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
-import Papa from "papaparse";
 import styles from "./FileUpload.module.css";
 import axios from 'axios';
+import * as XLSX from 'xlsx/xlsx.mjs';
 
 function fileUpload() {
   const [file, setFile] = useState();
@@ -13,13 +13,19 @@ function fileUpload() {
   const changeHandler = async (event) => {
     if (event.target.files[0]) {
       setFile(event.target.files[0]);
-      Papa.parse(event.target.files[0], {
-        header: false,
-        skipEmptyLines: true,
-        complete: function (results) {
-          setObj([...results.data]);
-        },
-      });
+      const fileReader = new FileReader();
+      fileReader.onload = function (e) {
+        console.log(e.target.result);
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const csvData = XLSX.utils.sheet_to_csv(worksheet);
+        let rows = csvData.split("\n");
+        //remove elment 0
+        rows.shift();
+        setObj(rows);
+      };
+      fileReader.readAsArrayBuffer(event.target.files[0]);
     }
   };
   const handleOnSubmit = async () => {
@@ -33,10 +39,10 @@ function fileUpload() {
       for (let i = 0; i < chunkedObjs.length; i++) {
         const chunkedObj = chunkedObjs[i];
         console.log(chunkedObj);
-        await axios.post('/api/v1/csv', chunkedObj).then((res) => {
-          window.alert(`${res.data.created} created, ${res.data.updated} updated, ${res.data.errors} errors`)
+        await axios.post('/api/v1/bulkAddPickup', chunkedObj).then((res) => {
+          window.alert(`${res.data.updated} updated, ${res.data.errors} errors`)
         }).catch(err => {
-          window.alert(`${err.response.data.created} created, ${err.response.data.updated} updated, ${err.response.data.message}`)
+          window.alert(` ${err.response.data.updated} updated, ${err.response.data.message}`)
         })
       }
     }
@@ -44,7 +50,7 @@ function fileUpload() {
 
   return (
     <div style={{ textAlign: "center", width: "100%", height: "100%" }}>
-      <h3>Unesi CSV u bazu</h3>
+      <h3>Unesi pick-up vremena u bazu</h3>
 
       <button
         onClick={() => {
@@ -58,7 +64,7 @@ function fileUpload() {
         className={styles.myButton}
         ref={hiddenFileInput}
         type={"file"}
-        accept={".csv"}
+        accept={".xlsx"}
         onChange={(e) => {
           changeHandler(e);
         }}

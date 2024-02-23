@@ -10,7 +10,6 @@ import { exportTableToExcel } from "../../lib/exportToExcel";
 export async function getServerSideProps(context) {
   const getData = await Reservation.find({
     status: { $ne: "CANCELLED" },
-    booked: { $ne: null },
   }).lean();
   const data = JSON.parse(JSON.stringify(getData));
   let airports = [];

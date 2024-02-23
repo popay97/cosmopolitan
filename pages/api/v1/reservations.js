@@ -22,8 +22,8 @@ export default async (req, res) => {
   let reservations = [];
   if (country === 'CRO') {
     reservations = await Reservation.find({
-      arrivalAirport: { $in: ["ZAG", "DBV", "PUY", "SPU", "RJK", 'ZAD'] },
-      depDate: { $gt: startDate, $lte: endDate },
+      arrivalAirport: { $nin: ["TGD", "TIV"] },
+      depDate: { $gte: startDate, $lte: endDate },
       status: { $ne: "CANCELLED" },
       transfer: { $in: ['STR', 'PTR'] },
       "pricing.calculated": true,
