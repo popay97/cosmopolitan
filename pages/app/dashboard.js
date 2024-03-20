@@ -49,8 +49,11 @@ export default function Home() {
       <main>
         <div className="grid">
           {userType === 'admin' ? <div className="card">
-            <FileComponent />
+            <FileComponent endpoint={"bulkAddPickup"} title={"Unesi pick-up vremena"}/>
           </div> : null}
+          {userType === 'admin' ? <div className="card">
+                        <FileComponent endpoint={"fourDay"} title={"Unesi 4-day fajl"}/>
+          </div> : null}  
           {/*  {userType === 'admin' ? <div
             className="card"
             style={{ cursor: "pointer" }}

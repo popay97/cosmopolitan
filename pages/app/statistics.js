@@ -38,7 +38,7 @@ export default function Statistics() {
             month: month,
         });
         setData(result.data);
-        setMonths(Object.keys(result.data.incoming[Object.keys(result.data.incoming)[0]]));
+        setMonths(Object.keys(result.data.incoming[Object.keys(result.data.incoming)[0]]).filter((month) => month !== 'totalTransfers' && month !== 'totalPassengers'));
         setAirportsIn(Object.keys(result.data.incoming));
         setAirportsOut(Object.keys(result.data.outgoing));
         setLoading(false);

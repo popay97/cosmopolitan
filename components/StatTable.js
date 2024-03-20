@@ -20,6 +20,7 @@ const StatTable = ({ data, airports ,months , passangers = false, id = "", year,
                             <th colSpan={colspan / months.length}>{`${month}-${year}`}</th>
                         )
                     })}
+                    {passangers ? <th colSpan={1}>Total</th> : <th colSpan={1}>Total</th>}
                 </tr>
                 <tr>
                     <th></th>
@@ -66,6 +67,8 @@ const StatTable = ({ data, airports ,months , passangers = false, id = "", year,
                                     </>
                                 )
                             })}
+                            {!passangers ? <td colSpan={1}>{data[type][airport]['totalTransfers']}</td> : 
+                            <td colSpan={1}>{data[type][airport]['totalPassengers']}</td>}
                         </tr >
                     )
                 }

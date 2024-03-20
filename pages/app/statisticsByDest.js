@@ -86,6 +86,14 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
             Header: "Percentage",
             accessor: "percentage",
           },
+          {
+            Header: "Number of Passengers",
+            accessor: "numOfPassengers",
+          },
+          {
+            Header: "% Passengers",
+            accessor: "percentagePassengers",
+          }
         ]
       }
       else {
@@ -102,6 +110,14 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
             Header: "Percentage",
             accessor: "percentage",
           },
+          {
+            Header: "Number of Passengers",
+            accessor: "numOfPassengers",
+          },
+          {
+            Header: "% Passengers",
+            accessor: "percentagePassengers",
+          }
         ]
       }
     },
@@ -122,14 +138,17 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
         for (let i = 0; i < resorts.length; i++) {
           let resort = resorts[i];
           let numOfTransfers = 0;
+          let numOfPassengers = 0;
           for (let j = 0; j < data.length; j++) {
             if (data[j].resort === resort) {
               numOfTransfers++;
+              numOfPassengers += data[j].adults + data[j].children + data[j].infants;
             }
           }
           let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          let percentagePassengers = ((numOfPassengers / total) * 100).toFixed(2);
           if (percentage > 0) {
-            resortData.push({ resort, numOfTransfers, percentage });
+            resortData.push({ resort, numOfTransfers, percentage, numOfPassengers, percentagePassengers });
           }
         }
         return resortData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
@@ -147,14 +166,17 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
         for (let i = 0; i < billingDestinations.length; i++) {
           let billingDestination = billingDestinations[i];
           let numOfTransfers = 0;
+          let numOfPassengers = 0;
           for (let j = 0; j < data.length; j++) {
             if (data[j].billingDestination === billingDestination) {
               numOfTransfers++;
+              numOfPassengers += data[j].adults + data[j].children + data[j].infants;
             }
           }
           let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          let percentagePassengers = ((numOfPassengers / total) * 100).toFixed(2);
           if (percentage > 0) {
-            billingDestinationData.push({ billingDestination, numOfTransfers, percentage });
+            billingDestinationData.push({ billingDestination, numOfTransfers, percentage, numOfPassengers, percentagePassengers });
           }
         }
         return billingDestinationData.sort((a, b) => b.numOfTransfers - a.numOfTransfers);
@@ -168,6 +190,7 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
       for (let i = 0; i < data.length; i++) {
         let monthData = data[i];
         let total = monthData.length;
+        let totalPassengers = monthData.reduce((total, current) => total + current.adults + current.children + current.infants, 0);
         for (let j = 0; j < monthData.length; j++) {
           let resort = monthData[j].resort;
           let billingDestination = monthData[j].billingDestination;
@@ -182,14 +205,17 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
         for (let j = 0; j < resorts.length; j++) {
           let resort = resorts[j];
           let numOfTransfers = 0;
+          let numOfPassengers = 0;
           for (let k = 0; k < monthData.length; k++) {
             if (monthData[k].resort === resort) {
               numOfTransfers++;
+              numOfPassengers += monthData[k].adults + monthData[k].children + monthData[k].infants;
             }
           }
           let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          let percentagePassengers = ((numOfPassengers / totalPassengers) * 100).toFixed(2);
           if (percentage > 0) {
-            monthlyResortData.push({ resort, numOfTransfers, percentage })
+            monthlyResortData.push({ resort, numOfTransfers, percentage, numOfPassengers,percentagePassengers })
           }
         }
         resortData.push(monthlyResortData.sort((a, b) => b.numOfTransfers - a.numOfTransfers));
@@ -197,14 +223,17 @@ export default function StatisticsByDest({ airports, resorts, billingDestination
         for (let j = 0; j < billingDestinations.length; j++) {
           let billingDestination = billingDestinations[j];
           let numOfTransfers = 0;
+          let numOfPassengers = 0;
           for (let k = 0; k < monthData.length; k++) {
             if (monthData[k].billingDestination === billingDestination) {
               numOfTransfers++;
+              numOfPassengers += monthData[k].adults + monthData[k].children + monthData[k].infants;
             }
           }
           let percentage = ((numOfTransfers / total) * 100).toFixed(2);
+          let percentagePassengers = ((numOfPassengers / totalPassengers) * 100).toFixed(2);
           if (parseFloat(percentage) > 0) {
-            monthlyBillingDestinationData.push({ billingDestination, numOfTransfers, percentage })
+            monthlyBillingDestinationData.push({ billingDestination, numOfTransfers, percentage, numOfPassengers, percentagePassengers })
           }
         }
         billingDestinationData.push(monthlyBillingDestinationData.sort((a, b) => b.numOfTransfers - a.numOfTransfers));

@@ -37,7 +37,7 @@ export default async (req, res) => {
       const reservations = await Reservation.find({
         arrivalAirport: destionation,
         status: { $in: ["BOOKED", "AMENDED"] },
-        billingDestination: { $ne: null },
+        billingDestination: { $nin: [null, ""]},
         arrivalDate: { $gte: queryStartDate, $lt: queryEndDate },
       }).lean();
       reservationsArray.push(reservations);
@@ -52,7 +52,7 @@ export default async (req, res) => {
     const reservations = await Reservation.find({
       arrivalAirport: destionation,
       status: { $in: ["BOOKED", "AMENDED"] },
-      billingDestination: { $ne: null },
+      billingDestination: { $nin: [null, ""]},
       arrivalDate: { $gte: queryStartDate, $lt: queryEndDate },
     }).lean();
     return res.status(200).json({ reservations, yearOnly: false });

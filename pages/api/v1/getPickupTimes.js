@@ -19,7 +19,7 @@ export default async function handler(req, res) {
             return;
         }
         else {
-            res.status(200).json({ incomingPickupTime: reservation.incomingPickupTime, outgoingPickupTime: reservation.outgoingPickupTime });
+            res.status(200).json({ pickupTime: reservation.outgoingPickupTime ?? 'no pickup-time added yet'});
             return;
         }
     }

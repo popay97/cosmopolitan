@@ -3,7 +3,7 @@ import styles from "./FileUpload.module.css";
 import axios from 'axios';
 import * as XLSX from 'xlsx/xlsx.mjs';
 
-function fileUpload() {
+function fileUpload({endpoint, title}) {
   const [file, setFile] = useState();
   const [obj, setObj] = useState([]);
   const hiddenFileInput = useRef(null);
@@ -21,8 +21,8 @@ function fileUpload() {
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const csvData = XLSX.utils.sheet_to_csv(worksheet);
         let rows = csvData.split("\n");
-        //remove elment 0
-        rows.shift();
+        //check if the first row is header
+
         setObj(rows);
       };
       fileReader.readAsArrayBuffer(event.target.files[0]);
@@ -39,7 +39,7 @@ function fileUpload() {
       for (let i = 0; i < chunkedObjs.length; i++) {
         const chunkedObj = chunkedObjs[i];
         console.log(chunkedObj);
-        await axios.post('/api/v1/bulkAddPickup', chunkedObj).then((res) => {
+        await axios.post(`/api/v1/${endpoint}`, chunkedObj).then((res) => {
           window.alert(`${res.data.updated} updated, ${res.data.errors} errors`)
         }).catch(err => {
           window.alert(` ${err.response.data.updated} updated, ${err.response.data.message}`)
@@ -50,7 +50,7 @@ function fileUpload() {
 
   return (
     <div style={{ textAlign: "center", width: "100%", height: "100%" }}>
-      <h3>Unesi pick-up vremena u bazu</h3>
+      <h3>{title}</h3>
 
       <button
         onClick={() => {

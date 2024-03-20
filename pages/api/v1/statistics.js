@@ -35,6 +35,8 @@ export default async function handler(req, res) {
       result[type][airport][month].adults += reservation.adults;
       result[type][airport][month].children += reservation.children;
       result[type][airport][month].infants += reservation.infants;
+      result[type][airport]['totalTransfers'] = result[type][airport]['totalTransfers'] ? result[type][airport]['totalTransfers'] + 1 : 1;
+      result[type][airport]['totalPassengers'] = result[type][airport]['totalPassengers'] ? result[type][airport]['totalPassengers'] + reservation.adults + reservation.children + reservation.infants : reservation.adults + reservation.children + reservation.infants;
     });
   };
 
@@ -85,6 +87,8 @@ export default async function handler(req, res) {
     for (const month of months) {
       ordered[month] = result.incoming[airport][month];
     }
+    ordered['totalTransfers'] = result.incoming[airport]['totalTransfers'];
+    ordered['totalPassengers'] = result.incoming[airport]['totalPassengers'];
     result.incoming[airport] = ordered;
     
   }
@@ -94,11 +98,11 @@ export default async function handler(req, res) {
     for (const month of months) {
       ordered[month] = result.outgoing[airport][month];
     }
+    ordered['totalTransfers'] = result.outgoing[airport]['totalTransfers'];
+    ordered['totalPassengers'] = result.outgoing[airport]['totalPassengers'];
     result.outgoing[airport] = ordered;
   }
   }
-  console.log(result);
-
 
   return res.status(200).json(result);
 }

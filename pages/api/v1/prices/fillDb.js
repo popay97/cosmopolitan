@@ -3,6 +3,7 @@ import Prices from '../../../../models/PricesModel.js';
 import Location from '../../../../models/LocationsModel.js';
 import dbConnect from '../../../../lib/dbConnect.js';
 import PricesModel from '../../../../models/PricesModel.js';
+import { parse } from 'path';
 function convertToMongoDate(dateString, startOrEnd) {
     // Split the dateString based on '.'
     
@@ -91,15 +92,23 @@ async function loadPricesCSVS() {
             }
             for (let i = 0; i < rows.length; i++) {
                 var row = rows[i];
-                const values = row.split(',').map(value => value.trim());
-                let shared = isNaN(Number(values[2])) ? 0 : Number(values[2]);
-                let private3less = isNaN(Number(values[3])) ? 0 : Number(values[3]);
-                let private3more = isNaN(Number(values[4])) ? 0 : Number(values[4]);
+                var values = row.split(';').map(value => value.trim());
+                //at places 2,3,4 replace , with . and convert to number
+                values[2] = values[2].replace(',', '.');
+                values[3] = values[3].replace(',', '.');
+                values[4] = values[4].replace(',', '.');
+
+                values[2] = values[2].replace(' ', '');
+                values[3] = values[3].replace(' ', '');
+                values[4] = values[4].replace(' ', '');
+                console.log(isNaN(parseFloat(values[2])));
+                let shared = isNaN(parseFloat(values[2])) ? 0 : parseFloat(values[2]);
+                let private3less = isNaN(parseFloat(values[3])) ? 0 : parseFloat(values[3]);
+                let private3more = isNaN(parseFloat(values[4])) ? 0 : parseFloat(values[4]);
                 //dates in csv are in format dd.mm.yyyy, convert to monogo compatible format
                 let validFrom = convertToMongoDate(values[5], 'start');
                 let validTo = convertToMongoDate(values[6], 'end');
-                console.log(validFrom);
-                console.log(validTo);
+
                 //if one of them is Invalid Date, log the row and skip it   
 
                 if (validFrom.toString() === 'Invalid Date' || validTo.toString() === 'Invalid Date') {

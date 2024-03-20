@@ -238,7 +238,7 @@ export default async function handler(req, res) {
       else {
         objForSave['hasPricesOutgoing'] = false;
       }
-      if (pricing.incomingInvoice.total > 0 && pricing.outgoingInvoice.cost > 0) {
+      if (pricing.incomingInvoice.total > 0 && pricing.outgoingInvoice.total > 0) {
         pricing.calculated = true;
       }
       objForSave = {

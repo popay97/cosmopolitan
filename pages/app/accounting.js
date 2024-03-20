@@ -253,11 +253,22 @@ export default function Accounting() {
           if (invoiceType === 'outgoing') {
             let objYear = new Date(value.depDate).getFullYear();
             let objMonth = new Date(value.depDate).getMonth() + 1;
-            var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) && withHandlingFee ? true : false;
+            var handlingFee = objYear === parseInt(year) && objMonth === parseInt(month) ? true : false;
             if (handlingFee) {
-              return value.pricing.outgoingInvoice.totalWithFee.toFixed(3);
-            } else {
-              return value.pricing.outgoingInvoice.total.toFixed(3);
+              if(withHandlingFee){
+              let tot =  value.pricing.ways == 2 ? value.pricing.outgoingInvoice.totalw1 + value.pricing.outgoingInvoice.totalw2 + value.pricing.outgoingInvoice.handlingFee :
+              value.pricing.outgoingInvoice.totalw2 + value.pricing.outgoingInvoice.handlingFee;
+              return Number(tot.toFixed(3));
+              }
+              else{
+                let tot =  value.pricing.ways == 2 ? value.pricing.outgoingInvoice.totalw1 + value.pricing.outgoingInvoice.totalw2 :
+                value.pricing.outgoingInvoice.totalw2;
+                return Number(tot.toFixed(3));
+              }
+            }
+            else {
+               let tot = value.pricing.outgoingInvoice.totalw1;
+                return Number(tot.toFixed(3));
             }
           }
           else if (invoiceType === 'incoming') {
@@ -371,7 +382,7 @@ export default function Accounting() {
             <button
               className="myButton"
               onClick={() => {
-                exportTableToExcel('accounting-table');
+                exportTableToExcel('accounting-table',`Obracun ${country} - ${invoiceType} - ${month}/${year}`);
               }}
             >
               Export to Excel
