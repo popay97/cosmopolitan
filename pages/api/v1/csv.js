@@ -6,16 +6,21 @@ import NextCors from 'nextjs-cors';
 import Log from '../../../models/LogModel.js';
 
 export default async function handler(req, res) {
+
   await NextCors(req, res, {
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     origin: '*',
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
   });
+
   await dbConnect();
+
   let updated = 0;
   let created = 0;
   let errors = 0;
+
   const csvData = [...req.body];
+
   for (let i = 0; i < csvData.length; i++) {
     console.log('for loop')
     let phone;
@@ -35,6 +40,8 @@ export default async function handler(req, res) {
       //remove whitespaces
       phone = phone.replace(/\s/g, "");
     }
+
+
     function formatDate(str, timestamp) {
       if (str.length === 7) {
         str = "0" + str;
@@ -45,6 +52,7 @@ export default async function handler(req, res) {
       let tmpDate = new Date(Date.UTC(yyyy, mm - 1, dd, parseInt(timestamp.split(":")[0]), parseInt(timestamp.split(":")[1])));
       return tmpDate;
     }
+
     console.log('prepare objForSave')
     objForSave = {
       resId: csvData[i][0] ? csvData[i][0].trim() : null,
@@ -80,6 +88,8 @@ export default async function handler(req, res) {
       hasPricesOutgoing: true,
       billingDestination: '',
     };
+
+
     //check if object has a field with value null
     for (let key in Object.keys(objForSave)) {
       if (typeof objForSave[key] === 'object') {
@@ -93,16 +103,21 @@ export default async function handler(req, res) {
         objForSave['hasEmptyFields'] = true;
       }
     }
+
+
     //check if location exists for the given accomCd and resort
     if (objForSave.accomCd !== null && objForSave.resort !== null) {
+
       var location = await Locations.findOne({
         code: objForSave.accomCd,
       });
+
       if (!location) {
         location = await Locations.findOne({
           hotel: objForSave.resort,
         });
       }
+
       if (location) {
         objForSave["billingDestination"] = location.destination;
       } else {
@@ -111,11 +126,16 @@ export default async function handler(req, res) {
         objForSave["hasPricesOutgoing"] = false;
       }
     }
+
+    
     if (objForSave.hasLocation) {
+
       let arrivalDate = objForSave.arrivalDate;
       let depDate = objForSave.depDate;
       let destination = objForSave.billingDestination;
       let booked = objForSave.booked;
+
+
       const pricesIncomingArrival = await Prices.findOne({
         airport: objForSave.arrivalAirport,
         destination: destination,
@@ -145,6 +165,7 @@ export default async function handler(req, res) {
         type: "outgoing",
       });
 
+
       var pricing = {
         ways: 0,
         calculated: false,
@@ -162,19 +183,24 @@ export default async function handler(req, res) {
           totalWithFee: 0,
         },
       };
+      
+
       if (arrivalDate.getMonth() === depDate.getMonth() && arrivalDate.getFullYear() === depDate.getFullYear()) {
         pricing.ways = 2;
       }
       else {
         pricing.ways = 1;
       }
+
+
       if (pricesIncomingArrival && pricesIncomingDep) {
+
         if (objForSave.transfer === 'STR') {
           pricing.incomingInvoice.totalw1 = Number((objForSave.adults * pricesIncomingArrival.shared + (objForSave.children * pricesIncomingArrival.shared * 0.5)).toFixed(3));
           pricing.incomingInvoice.totalw2 = Number((objForSave.adults * pricesIncomingDep.shared + (objForSave.children * pricesIncomingDep.shared * 0.5)).toFixed(3));
           pricing.incomingInvoice.total = Number((pricing.incomingInvoice.totalw1 + pricing.incomingInvoice.totalw2).toFixed(3));
-
         }
+
         else if (objForSave.transfer === 'PTR') {
           //just the sum of the adults and children matters
           if (objForSave.adults + objForSave.children <= 3) {
@@ -188,10 +214,13 @@ export default async function handler(req, res) {
             pricing.incomingInvoice.total = Number((pricing.incomingInvoice.totalw1 + pricing.incomingInvoice.totalw2).toFixed(3));
           }
         }
+
         else {
           pricing.incomingInvoice.total = 0;
         }
+
         objForSave['hasPricesIncoming'] = true;
+
       }
       else {
         pricing.incomingInvoice.total = 0;
@@ -218,7 +247,6 @@ export default async function handler(req, res) {
             pricing.outgoingInvoice.totalWithFee = pricing.ways == 2 ? Number((pricing.outgoingInvoice.total + pricing.outgoingInvoice.handlingFee).toFixed(3)) : Number((pricing.outgoingInvoice.totalw2 + pricing.outgoingInvoice.handlingFee).toFixed(3));
           }
           else {
-
             pricing.outgoingInvoice.cost = Number(pricesOutgoingArrival.private3more.toFixed(3)) + Number(pricesOutgoingDep.private3more.toFixed(3));
             pricing.outgoingInvoice.handlingFee = Number(((objForSave.adults * 4.5) + (objForSave.children * 2.25)).toFixed(3));
             pricing.outgoingInvoice.totalw1 = Number(pricesOutgoingArrival.private3more.toFixed(3));

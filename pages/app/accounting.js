@@ -34,14 +34,7 @@ export default function Accounting() {
   }, [data]);
 
   const handleInvoice = async () => {
-    //get the sum of total cost column of the current table
-    /*  let totalCost = 0;
-     for (let i = 0; i < data.length; i++) {
-       let value = data[i];
-         totalCost += parseFloat(value.pricing.outgoingInvoice.totalWithFee);
    
-     } */
-    // calculate total sum and total handling fee 
     let totalCost = 0;
     let totalHandlingFee = 0;
     for (let i = 0; i < data.length; i++) {
@@ -236,7 +229,7 @@ export default function Accounting() {
         },
 
       },
-      {
+     /*  {
         Header: "Extra Cost",
         accessor: (row) => row,
         Cell: ({ value }) => {
@@ -245,7 +238,7 @@ export default function Accounting() {
           }
           else return null;
         }
-      },
+      }, */
       {
         Header: "Total Cost",
         accessor: (row) => row,

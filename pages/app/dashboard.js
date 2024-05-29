@@ -51,17 +51,11 @@ export default function Home() {
           {userType === 'admin' ? <div className="card">
             <FileComponent endpoint={"bulkAddPickup"} title={"Unesi pick-up vremena"}/>
           </div> : null}
+
           {userType === 'admin' ? <div className="card">
-                        <FileComponent endpoint={"fourDay"} title={"Unesi 4-day fajl"}/>
+            <FileComponent endpoint={"fourDay"} title={"Unesi 4-day fajl"}/>
           </div> : null}  
-          {/*  {userType === 'admin' ? <div
-            className="card"
-            style={{ cursor: "pointer" }}
-          >s
-            <h3>Posljednji import &rarr;</h3>
-            <p>{lastimport?.dateTimeStamp}</p>
-          </div>
-            : null} */}
+       
           <div
             className="card"
             onClick={() => {
@@ -81,6 +75,7 @@ export default function Home() {
           >
             <h3>Upravljanje korisnicima &rarr;</h3>
           </div>)}
+
           {userType === 'admin' && (<div
             className="card"
             onClick={() => {
@@ -90,6 +85,17 @@ export default function Home() {
           >
             <h3>Statistike po mjesecima &rarr;</h3>
           </div>)}
+
+          {userType === 'admin' && (<div
+            className="card"
+            onClick={() => {
+              window.location.href = "/app/comparative-stats";
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <h3>Komparativna statistika &rarr;</h3>
+          </div>)}
+
           {userType === 'admin' && (<div
             className="card"
             onClick={() => {
@@ -99,6 +105,7 @@ export default function Home() {
           >
             <h3>Statistike po po destinacijama &rarr;</h3>
           </div>)}
+          
           {userType === 'admin' && (<div
             className="card"
             onClick={() => {

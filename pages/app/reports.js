@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import Reservation from "../../models/ReservationModel";
+import ExtraRates from "../../models/ExtraRates";
 import Head from "next/head";
 import Navbar from "../../components/Navbar";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
-import TimePicker from 'react-time-picker';
 import {
   dateBetweenArrFn,
   dateBetweenDepFn,
@@ -28,9 +27,9 @@ import CommentModal from "../../components/CommentModal";
 export async function getServerSideProps(context) {
   let today = new Date()
   let date = new Date(today.getTime() - (60 * 24 * 60 * 60 * 1000))
-
+  let ExtraRatesData = await ExtraRates.find({}).lean();
+  ExtraRatesData = JSON.parse(JSON.stringify(ExtraRatesData)); 
   const getData = await Reservation.find({
-    status: { $ne: "CANCELLED" },
     depDate: { $gte: date }
   }).sort({ arrivalDate: 1 }).lean();
 
@@ -49,11 +48,11 @@ export async function getServerSideProps(context) {
   });
 
   return {
-    props: { AllData, airports },
+    props: { AllData, airports, ExtraRatesData },
   };
 }
 
-function NDayReport({ AllData, airports }) {
+function NDayReport({ AllData, airports, ExtraRatesData}) {
 
   const [airport, setAirports] = React.useState(airports);
   React.useEffect(() => {
@@ -137,30 +136,9 @@ function NDayReport({ AllData, airports }) {
   }, [commentData]);
 
 
-  const reapplyFilters = (page) => {
-    let globalFilter1 = glFilter;
-    if (globalFilter1 !== '' && globalFilter1 !== undefined && globalFilter1 !== null) {
-      setGlobalFilter(globalFilter1);
-      return
-    }
-    if (Array.isArray(dateBetweenArr)) {
-      let dateBetweenArr1 = dateBetweenArr;
-
-      setDateBetweenArr(dateBetweenArr1);
-    }
-    if (Array.isArray(dateBetweenDep)) {
-      let dateBetweenDep1 = dateBetweenDep;
-      setDateBetweenDep(dateBetweenDep1);
-    }
-    let country1 = country;
-    setCountry(country1);
-    gotoPage(page);
-  };
-
-
 
   const changePickUpTime = async (e, objectId, type) => {
-
+/* 
     if (e && objectId && type) {
       let body;
       if (type === 'incoming')
@@ -192,13 +170,13 @@ function NDayReport({ AllData, airports }) {
       catch (err) {
         console.log(err)
       }
-    }
+    } */
   }
 
 
 
   const changeExtraCosts = async (pricing, objectId) => {
-    if (pricing && objectId) {
+    /* if (pricing && objectId) {
       let body = {
         method: "update",
         table: "reservations",
@@ -218,7 +196,7 @@ function NDayReport({ AllData, airports }) {
         console.log(err)
       }
 
-    }
+    } */
   }
 
 
@@ -424,61 +402,42 @@ function NDayReport({ AllData, airports }) {
             },
           },
           {
-            Header: "Incoming Pickup Time",
-            accessor: (row) => row,
-            Cell: ({ value }) => {
-              let date = new Date(value.arrivalDate)
-              let now = new Date()
-              let diff = date.getTime() - now.getTime()
-              let hours = Math.floor(diff / (1000 * 60 * 60));
-              if (hours > 0) {
-                return <div style={{ width: '150px' }}><TimePicker
-                  onChange={async (e) => {
-                    let page = pageIndex;
-                    let tmp = [...allData];
-                    let index = tmp.findIndex((el) => el.resId === value.resId);
-                    tmp[index].incomingPickupTime = e;
-                    setAllData(tmp);
-                    await changePickUpTime(e, value._id, 'incoming')
-
-                    reapplyFilters(page);
-                  }
-                  }
-                  value={value.incomingPickupTime ?? null}
-                ></TimePicker></div>
-              }
-              else {
-                return null
-              }
-            }
-          },
-          {
             Header: "Outgoing Pickup Time",
             accessor: (row) => row,
             Cell: ({ value }) => {
-              let date = new Date(value.depDate)
-              let now = new Date()
-              let diff = date.getTime() - now.getTime()
-              let hours = Math.floor(diff / (1000 * 60 * 60));
-              if (hours > 0) {
-                return <div style={{ width: '150px' }}><TimePicker
-                  onChange={async (e) => {
-                    let page = pageIndex;
-                    let tmp = [...allData];
-                    let index = tmp.findIndex((el) => el.resId === value.resId);
-                    tmp[index].outgoingPickupTime = e;
-                    setAllData(tmp);
-                    await changePickUpTime(e, value._id, 'outgoing')
-                    reapplyFilters(page);
-                  }
-                  }
-                  value={value.outgoingPickupTime ?? null}
-                ></TimePicker></div>
+            const [time, setTime] = React.useState(value.outgoingPickupTime || "");
+            const [isValid, setIsValid] = React.useState(true);
+
+            const handleTimeChange = (e) => {
+              const inputTime = e.target.value;
+              const regex = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/;
+              if (regex.test(inputTime) || inputTime === "") {
+                setIsValid(true);
+                setTime(inputTime);
+                changePickUpTime(inputTime, value._id, 'outgoing')
+              } else {
+                setIsValid(false);
               }
-              else {
-                return null
-              }
-            }
+            };
+
+            return (
+              <div style={{ width: "90%" }}>
+                <input
+                  type="text"
+                  value={time}
+                  onBlur={handleTimeChange}
+                  onChange={(e) => {
+                    setTime(e.target.value);
+                  }}
+                  style={{
+                    border: isValid ? '1px solid lightgrey' : '1px solid red',
+                    borderRadius: '5px',
+                    padding: '5px',
+                  }}
+                />
+              </div>
+            );
+            },
           },
           {
             Header: "Extra Costs",
@@ -502,7 +461,10 @@ function NDayReport({ AllData, airports }) {
                     async (e) => {
                       let tmp = [...allData];
                       let index = tmp.findIndex((el) => el.resId === value.resId);
-                      tmp[index].pricing.incomingInvoice.extraCost = e.target.value;
+                      tmp[index].pricing.incomingInvoice.extraCost = {
+                        price: e.target.value,
+                        description: "Extra costs", // this is a placeholder, this needs updating, different input method altogether there o
+                      }
                       await changeExtraCosts(tmp[index].pricing, value._id)
                     }
                   }
@@ -647,6 +609,17 @@ function NDayReport({ AllData, airports }) {
             Header: "Resort",
             accessor: (row) => row.billingDestination,
           },
+          {
+            Header: "Outgoing Pickup Time",
+            accessor: (row) => row?.outgoingPickupTime ?? 'Nedefinisano',
+          },
+          {
+            Header: "Extra Costs",
+            accessor: (row) => row,
+            Cell: ({ value }) => {
+             return null;
+            }
+          },
         ];
       }
 
@@ -714,14 +687,14 @@ function NDayReport({ AllData, airports }) {
 
   React.useEffect(() => {
     state.pageSize = pageLength;
-    document.getElementById("right").click();
+    document.getElementById("right")?.click();
     setTimeout(() => {
-      document.getElementById("left").click();
+      document.getElementById("left")?.click();
     }, 300);
     if (pageLength == AllData.length + 1) {
       setForExport(true);
       setTimeout(() => {
-        document.getElementById("download-report").click();
+         document.getElementById("download-report")?.click();
         setForExport(false);
         window.location.reload();
       }, 500);

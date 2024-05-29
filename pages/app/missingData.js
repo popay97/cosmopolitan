@@ -27,7 +27,6 @@ const MissingDataComponent = () => {
             type: tableName,
             missingObj: missingObj
         }
-       
 
         try {
             setActive(true)

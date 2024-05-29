@@ -327,7 +327,7 @@ function TransferPrices() {
                                 onChange={(e) => handleChange(index, e.target.value, e.target.name)}
                                 name="airport"
                             >
-                                <option value="">Select</option>
+                                <option value="">{row?.airport ?? "select"}</option>
                                 {airports.map((airport) => (
                                     <option value={airport}>{airport}</option>
                                 ))}
@@ -337,7 +337,7 @@ function TransferPrices() {
                                 onChange={(e) => handleChange(index, e.target.value, e.target.name)}
                                 name="destination"
                             >
-                                <option value="">Select</option>
+                                <option value="">{row?.destination + "(lokacija ne postoji u bazi)" ?? "select"}</option>
                                 {destinations.map((destination) => (
                                     <option value={destination}>{destination}</option>
                                 ))}

@@ -3,6 +3,7 @@ import dbConnect from '../../../lib/dbConnect.js';
 import Log from '../../../models/LogModel.js';
 import { processSingleReservation } from '../../../lib/reservationBatchProcess.js';
 
+
 export default async function handler(req, res) {
 
     await dbConnect();
@@ -10,7 +11,6 @@ export default async function handler(req, res) {
     let updated = 0;
     let errors = 0;
     let stringifiedRows = [...req.body];
-    stringifiedRows.shift();
     // RES_ID,ADU,CHD,INF,BOOKED,USER_CD,ARR,ARR_DATE,ARR_FLIGHT,DEP_DATE,DEP_FLIGHT,TRANSFER_CD,TRANSFER,ACCOM_CD,ACCOM,RESORT,ROOM,COUNTRY,DMC,CHD_AGE1,CHD_AGE2,CHD_AGE3,CHD_AGE4,GIATA_CD,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     let csvMapByIndex = {
         0: "resId",
@@ -47,6 +47,8 @@ export default async function handler(req, res) {
             arrAirport: null,
             depTime: null,
         };
+
+        
         //csv arrivalFlight field comes in always formatted: MAN 06:40 - TIV 10:45 EZY2271
         //csv departureFlight field comes in always formatted: TIV 11:35 - MAN 13:40 EZY2272
         //in loop split the string and assign values to rowObject properly
@@ -55,9 +57,6 @@ export default async function handler(req, res) {
             if (csvMapByIndex[j]) {
                 switch (csvMapByIndex[j]) {
                     case "transfer":
-                        console.log(rowArray[j]);
-                        let str = '';
-                        str.inc
                         if(rowArray[j].includes(";")){
                             //contains multiple transfers drop this whole row and log it
                             console.log("Multiple transfers in one row");
@@ -65,16 +64,16 @@ export default async function handler(req, res) {
                             dropRow = true;
                             continue;
                         }
-                        else if(rowArray[j].toLowerCase() == "shared transfer"){
+                        else if(rowArray[j].toLowerCase().startsWith("shared transfer")){
                             rowObject[csvMapByIndex[j]] = "STR";
                         }
-                        else if(rowArray[j].toLowerCase() == "private transfer"){
+                        else if(rowArray[j].toLowerCase().startsWith("private transfer")){
                             rowObject[csvMapByIndex[j]] = "PTR";
                         }
-                        else if(rowArray[j].toLowerCase() == "no shared transfer"){
+                        else if(rowArray[j].toLowerCase().startsWith("no shared transfer")){
                             rowObject[csvMapByIndex[j]] = "NST";
                         }
-                        else if(rowArray[j].toLowerCase() == "no private transfer"){
+                        else if(rowArray[j].toLowerCase().startsWith("no private transfer")){
                             rowObject[csvMapByIndex[j]] = "NPT";
                         }
                         else{
@@ -176,6 +175,7 @@ export default async function handler(req, res) {
                 let updatedReservation = await Reservation.findOneAndUpdate({ resId: rowObject.resId },
                     {
                         adults: rowObject.adults,
+                        status: "AMENDED",
                         children: rowObject.children,
                         infants: rowObject.infants,
                         booked: rowObject.booked,
@@ -203,6 +203,7 @@ export default async function handler(req, res) {
             
             let newReservation = new Reservation({
                 resId: rowObject.resId,
+                status: "AMENDED",
                 adults: rowObject.adults,
                 children: rowObject.children,
                 infants: rowObject.infants,
@@ -234,4 +235,3 @@ export default async function handler(req, res) {
 
     res.status(200).json({created,updated, errors });
 }
-

@@ -33,7 +33,7 @@ export default function Statistics() {
         if (!month || month < 1 || month > 12) {
             month = undefined;
         }
-        const result = await axios.post('/api/v1/statistics', {
+        const result = await axios.post('/api/v1/statistics2', {
             year: year,
             month: month,
         });

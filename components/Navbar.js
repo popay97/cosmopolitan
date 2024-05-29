@@ -5,10 +5,12 @@ function Navbar({noBack}) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem('cosmo_token');
     const user = jwt.decode(token);
     setUser(user);
+
     if (!token) {
       router.push('/');
 
@@ -21,36 +23,50 @@ function Navbar({noBack}) {
   const menuLinks = [{ href: 'app/dashboard', title: 'Dashboard' }, { href: 'app/accounting', title: 'Obracuni' }, { href: 'app/manageUsers', title: 'Upravljanje Korisnicima' }, { href: 'app/reports', title: 'Report/Baza' }, { href: 'app/accounting', title: 'Accounting' }, { href: 'app/statistics', title: 'Statistike Mjeseci' }, { href: 'app/statisticsByDest', title: 'Statistike Destinacije' }, { href: 'app/tables', title: 'Cijene/Lokacije' },];
   return (
     <div className="navbar">
-
-      {noBack != true ? <div className="navbar__left">
-        <div onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>&larr; Back</div>
-      </div> : <div></div>}
-      <h1 className="navbar__title">Cosmopolitan Management Panel</h1>
-      {user?.isAdmin && (<div className="navbar__right">
-        <button className="navbar__hamburger" onClick={toggleMenu}>
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        {isMenuOpen && (
-          <div className="navbar__menu">
-            {menuLinks.map((link, index) => (
-              <div key={index} className='navbar__menu-link' onClick={() => {
-                router.push(`/${link.href}`);
-                setIsMenuOpen(false);
-              }} >
-                {link.title}
-              </div>
-            ))}
-            <div className='navbar__menu-link' onClick={() => {
-              localStorage.removeItem('cosmo_token');
-              router.push('/');
-            }} >
-              Sign Out
-            </div>
+      <div className="navbar__left">
+        {noBack != true && (
+          <div onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>
+            &larr; Back
           </div>
         )}
-      </div>)}
+      </div>
+      <h1 className="navbar__title">Cosmopolitan Management Panel</h1>
+      <div className="navbar__right">
+        {user?.isAdmin && (
+          <>
+            <button className="navbar__hamburger" onClick={toggleMenu}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            {isMenuOpen && (
+              <div className="navbar__menu">
+                {menuLinks.map((link, index) => (
+                  <div
+                    key={index}
+                    className="navbar__menu-link"
+                    onClick={() => {
+                      router.push(`/${link.href}`);
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    {link.title}
+                  </div>
+                ))}
+                <div
+                  className="navbar__menu-link"
+                  onClick={() => {
+                    localStorage.removeItem('cosmo_token');
+                    router.push('/');
+                  }}
+                >
+                  Sign Out
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
       <style jsx>{`
         .navbar {
           display: flex;
@@ -70,6 +86,7 @@ function Navbar({noBack}) {
 
         .navbar__title {
           margin: 0;
+          text-align: center;
         }
 
         .navbar__right {
@@ -127,43 +144,44 @@ function Navbar({noBack}) {
           padding: 10px 20px;
           text-decoration: none;
           color: #000000;
-          transition: background 0.3s }
+          transition: background 0.3s;
+        }
 
-          .navbar__menu-link:hover {
-            background: #eaeaea;
+        .navbar__menu-link:hover {
+          background: #eaeaea;
+        }
+
+        @media (max-width: 768px) {
+          .navbar {
+            flex-direction: column;
+            height: auto;
           }
-      
-          @media (max-width: 768px) {
-            .navbar {
-              flex-direction: column;
-              height: auto;
-            }
-      
-            .navbar__left,
-            .navbar__right {
-              margin: 10px 0;
-            }
-      
-            .navbar__title {
-              margin: 10px 0;
-            }
-      
-            .navbar__menu {
-              position: static;
-              box-shadow: none;
-              border: none;
-              min-width: auto;
-              margin-top: 10px;
-            }
-      
-            .navbar__menu-link {
-              display: inline-block;
-              padding: 10px 20px;
-              margin-right: 10px;
-              margin-bottom: 10px;
-            }
+
+          .navbar__left,
+          .navbar__right {
+            margin: 10px 0;
           }
-        `}</style>
+
+          .navbar__title {
+            margin: 10px 0;
+          }
+
+          .navbar__menu {
+            position: static;
+            box-shadow: none;
+            border: none;
+            min-width: auto;
+            margin-top: 10px;
+          }
+
+          .navbar__menu-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
