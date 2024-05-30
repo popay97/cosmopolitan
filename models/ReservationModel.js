@@ -1,5 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
-
+import ExtraRates from "./ExtraRates";
 const ReservationSchema = new Schema(
   {
     resId: {
@@ -79,21 +79,27 @@ const ReservationSchema = new Schema(
         extraCostw2: {
           price: Number,
           description: String,
+        },
       },
-    },
     },
     hasEmptyFields: Boolean,
     hasLocation: Boolean,
     hasPricesIncoming: Boolean,
     hasPricesOutgoing: Boolean,
     outgoingPickupTime: String,
+    extraItemsw1: {
+      type: [ExtraRates.schema],
+    },
+    extraItemsw2: {
+      type: [ExtraRates.schema],
+    },
     comments: [
       {
         user: String,
         comment: String,
         date: Date,
-      }
-    ]
+      },
+    ],
   },
   {
     collection: "reservation",
@@ -105,14 +111,38 @@ const ReservationSchema = new Schema(
 ReservationSchema.set("toObject", { virtuals: true });
 ReservationSchema.set("toJSON", { virtuals: true });
 ReservationSchema.virtual("pricing.incomingInvoice.total").get(function () {
-  return Number(((this.pricing?.incomingInvoice?.totalw1 ?? 0) + (this.pricing?.incomingInvoice?.totalw2 ?? 0) + (this.pricing?.incomingInvoice?.extraCostw1?.price ?? 0) + (this.pricing?.incomingInvoice?.extraCostw2?.price ?? 0)).toFixed(3));
+  return Number(
+    (
+      (this.pricing?.incomingInvoice?.totalw1 ?? 0) +
+      (this.pricing?.incomingInvoice?.totalw2 ?? 0) +
+      (this.pricing?.incomingInvoice?.extraCostw1?.price ?? 0) +
+      (this.pricing?.incomingInvoice?.extraCostw2?.price ?? 0)
+    ).toFixed(3)
+  );
 });
 ReservationSchema.virtual("pricing.outgoingInvoice.total").get(function () {
-  return Number(((this.pricing?.outgoingInvoice?.totalw1 ?? 0) + (this.pricing?.outgoingInvoice?.totalw2 ?? 0) + (this.pricing?.outgoingInvoice?.extraCostw1?.price ?? 0) + (this.pricing.outgoingInvoice.extraCostw2.price ?? 0)).toFixed(3));
+  return Number(
+    (
+      (this.pricing?.outgoingInvoice?.totalw1 ?? 0) +
+      (this.pricing?.outgoingInvoice?.totalw2 ?? 0) +
+      (this.pricing?.outgoingInvoice?.extraCostw1?.price ?? 0) +
+      (this.pricing.outgoingInvoice.extraCostw2.price ?? 0)
+    ).toFixed(3)
+  );
 });
-ReservationSchema.virtual("pricing.outgoingInvoice.totalWithFee").get(function () {
-  return Number(((this.pricing?.outgoingInvoice?.totalw1 ?? 0) + (this.pricing?.outgoingInvoice?.totalw2 ?? 0) + (this.pricing?.outgoingInvoice?.extraCostw1?.price ?? 0) + (this.pricing?.outgoingInvoice?.extraCostw2?.price ?? 0) + (this.pricing?.outgoingInvoice?.handlingFee ?? 0)).toFixed(3));
-});
+ReservationSchema.virtual("pricing.outgoingInvoice.totalWithFee").get(
+  function () {
+    return Number(
+      (
+        (this.pricing?.outgoingInvoice?.totalw1 ?? 0) +
+        (this.pricing?.outgoingInvoice?.totalw2 ?? 0) +
+        (this.pricing?.outgoingInvoice?.extraCostw1?.price ?? 0) +
+        (this.pricing?.outgoingInvoice?.extraCostw2?.price ?? 0) +
+        (this.pricing?.outgoingInvoice?.handlingFee ?? 0)
+      ).toFixed(3)
+    );
+  }
+);
 
-
-export default (mongoose.models.Reservation || mongoose.model("Reservation", ReservationSchema));
+export default mongoose.models.Reservation ||
+  mongoose.model("Reservation", ReservationSchema);

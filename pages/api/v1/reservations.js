@@ -40,9 +40,7 @@ export default async (req, res) => {
       status: { $ne: "CANCELLED" },
       transfer: { $in: ["STR", "PTR"] },
       "pricing.calculated": true,
-    })
-      .sort({ arrivalDate: 1 })
-      .lean();
+    }).sort({ arrivalDate: 1 });
   }
 
   if (country === "ME") {
@@ -60,14 +58,10 @@ export default async (req, res) => {
       status: { $ne: "CANCELLED" },
       transfer: { $in: ["STR", "PTR"] },
       "pricing.calculated": true,
-    })
-      .sort({ arrivalDate: 1 })
-      .lean();
-
+    }).sort({ arrivalDate: 1 });
     reservations.sort((a, b) => {
       return new Date(a.arrivalDate) - new Date(b.arrivalDate);
     });
   }
-
   return res.status(200).json(reservations);
 };
