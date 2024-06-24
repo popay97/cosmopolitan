@@ -46,7 +46,7 @@ export default async (req, res) => {
       if (country == "ME") {
         reservations = await Reservation.find({
           status: { $ne: "CANCELLED" },
-          arrivalAirport: { $eq: "TIV" },
+          arrivalAirport: { $in: ["TIV", "TGD"] },
           depDate: { $gte: startDate, $lt: endDate },
         })
           .lean()
