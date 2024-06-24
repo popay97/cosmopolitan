@@ -280,7 +280,7 @@ function NDayReport({ AllData, airports, ExtraRatesData }) {
           Header: "Phone",
           accessor: "phone",
           Cell: ({ value }) => {
-            return value.replace("+", "00").toLowerCase();
+            return value?.replace("+", "00").toLowerCase() ?? "N/A";
           },
           canFilter: false,
         },
@@ -669,7 +669,6 @@ function NDayReport({ AllData, airports, ExtraRatesData }) {
     nextPage,
     setFilter,
     previousPage,
-    globalFilter,
     setGlobalFilter,
     state: { pageIndex, pageSize },
   } = useTable(
@@ -685,7 +684,16 @@ function NDayReport({ AllData, airports, ExtraRatesData }) {
   );
 
   const reloadAllData = () => {
-    setAllData(AllData);
+    var data = AllData;
+    if (country == "ME") {
+      data = AllData.filter((item) => item.arrivalAirport == "TIV");
+    } else if (country == "HR") {
+      data = AllData.filter(
+        (item) => item.arrivalAirport != "TIV" && item.arrivalAirport != "TGD"
+      );
+    }
+
+    setAllData(data);
   };
 
   const loadReport = (country, days, transferType) => {
